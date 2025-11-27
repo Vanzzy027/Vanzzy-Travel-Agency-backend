@@ -1,0 +1,31 @@
+import { Hono } from 'hono';
+import {
+  createBooking,
+  getAllBookings,
+  getBookingById,
+  updateBooking,
+  cancelBooking,
+  getUserBookings,
+  getVehicleBookings,
+  completeBooking
+} from './bookings.controller';
+import { adminRoleAuth, bothRolesAuth } from '../middleware/bearAuth';
+
+const bookingsRouter = new Hono();
+
+// Apply authentication to all booking routes
+bookingsRouter.use('*', bothRolesAuth);
+
+// User routes
+bookingsRouter.post('/', createBooking);
+bookingsRouter.get('/my-bookings', getUserBookings);
+bookingsRouter.get('/:id', getBookingById);
+bookingsRouter.patch('/:id/cancel', cancelBooking);
+
+// Admin only routes
+bookingsRouter.get('/', getAllBookings);
+bookingsRouter.get('/vehicle/:vehicleId', adminRoleAuth, getVehicleBookings);
+bookingsRouter.put('/:id', adminRoleAuth, updateBooking);
+bookingsRouter.patch('/:id/complete', adminRoleAuth, completeBooking);
+
+export default bookingsRouter;
