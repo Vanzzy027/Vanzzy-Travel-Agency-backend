@@ -37,14 +37,34 @@ export interface UserUpdateData {
 
 export const getAllUsersService = async (): Promise<any[]> => {
     const db = getDbPool();
+
     const query = `
-        SELECT user_id, first_name, last_name, email, contact_phone, user_type, created_at, updated_at
+        SELECT 
+            user_id,
+            first_name,
+            last_name,
+            email,
+            contact_phone,
+            address,
+            photo,
+            role,
+            status,
+            verified,
+            national_id,
+            created_at,
+            updated_at
         FROM Users
     `;
 
     try {
         const result = await db.request().query(query);
-        return result.recordset;
+
+        // Convert BIT → boolean for verified
+        return result.recordset.map((user: any) => ({
+            ...user,
+            verified: Boolean(user.verified)
+        }));
+        
     } catch (error) {
         console.error("Database error in getAllUsersService:", error);
         throw new Error('Failed to retrieve all users.');
@@ -56,49 +76,99 @@ export const getAllUsersService = async (): Promise<any[]> => {
 
 
 
-
-
-
-
-//  Update User By ID Service 
-export const updateUserByIdService = async (user_id: string, updateData: UserUpdateData): Promise<boolean> => {
+//update by id 
+export const updateUserByIdService = async (
+  user_id: string,
+  updateData: Record<string, any>
+): Promise<boolean> => {
     const db = getDbPool();
 
+    const allowedFields: Record<string, any> = {
+        first_name: sql.NVarChar(50),
+        last_name: sql.NVarChar(50),
+        email: sql.NVarChar(255),
+        contact_phone: sql.NVarChar(20),
+        address: sql.NVarChar(255),
+        photo: sql.NVarChar(255),
+        role: sql.NVarChar(20),
+        status: sql.NVarChar(20),
+        national_id: sql.VarChar(20),
+        verified: sql.Bit
+    };
+
     const fields: string[] = [];
-    const request = db.request().input('user_id', sql.Int, user_id);
+    const request = db.request().input("user_id", sql.UniqueIdentifier, user_id);
 
-    // Build the dynamic SET clause
+    // Build dynamic SQL for only valid + provided fields
     for (const key in updateData) {
-        const value = updateData[key as keyof UserUpdateData];
-        if (value !== undefined) {
+        if (updateData[key] !== undefined && allowedFields[key]) {
             fields.push(`${key} = @${key}`);
-
-            if (typeof value === 'string') {
-                request.input(key, sql.NVarChar(255), value);
-            }
+            request.input(key, allowedFields[key], updateData[key]);
         }
     }
 
     if (fields.length === 0) {
-        return false; 
+        return false; // Nothing to update
     }
-    fields.push('updated_at = GETDATE()');
+
+    fields.push("updated_at = GETDATE()");
 
     const query = `
-        UPDATE Users 
-        SET ${fields.join(', ')}
+        UPDATE Users
+        SET ${fields.join(", ")}
         WHERE user_id = @user_id
     `;
 
     try {
         const result = await request.query(query);
-        // Returns true if one or more rows were affected
         return result.rowsAffected[0] > 0;
     } catch (error) {
-        console.error(`Database error in updateUserByIdService for ID ${user_id}:`, error);
-        throw new Error('Failed to update user data.');
+        console.error("Error updating user:", error);
+        throw new Error("Failed to update user.");
     }
 };
+
+
+
+//  Update User By ID Service 
+// export const updateUserByIdService = async (user_id: string, updateData: UserUpdateData): Promise<boolean> => {
+//     const db = getDbPool();
+
+//     const fields: string[] = [];
+//     const request = db.request().input('user_id', sql.Int, user_id);
+
+//     // Build the dynamic SET clause
+//     for (const key in updateData) {
+//         const value = updateData[key as keyof UserUpdateData];
+//         if (value !== undefined) {
+//             fields.push(`${key} = @${key}`);
+
+//             if (typeof value === 'string') {
+//                 request.input(key, sql.NVarChar(255), value);
+//             }
+//         }
+//     }
+
+//     if (fields.length === 0) {
+//         return false; 
+//     }
+//     fields.push('updated_at = GETDATE()');
+
+//     const query = `
+//         UPDATE Users 
+//         SET ${fields.join(', ')}
+//         WHERE user_id = @user_id
+//     `;
+
+//     try {
+//         const result = await request.query(query);
+//         // Returns true if one or more rows were affected
+//         return result.rowsAffected[0] > 0;
+//     } catch (error) {
+//         console.error(`Database error in updateUserByIdService for ID ${user_id}:`, error);
+//         throw new Error('Failed to update user data.');
+//     }
+// };
 
 
 

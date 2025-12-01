@@ -1,4 +1,5 @@
 import { Context } from "hono";
+import type { AuthContext } from "../middleware/bearAuth";
 import {
   createBookingService,
   getAllBookingsService,
@@ -12,7 +13,7 @@ import {
 import { BookingSchema, BookingUpdateSchema } from "../validators/booking.validators";
 
 // Create new booking
-export const createBooking = async (c: Context) => {
+export const createBooking = async (c: AuthContext) => {
   try {
     if (!c.user) {
       return c.json({ error: 'Authentication required.' }, 401);
@@ -82,7 +83,7 @@ export const getAllBookings = async (c: Context) => {
 };
 
 // Get booking by ID
-export const getBookingById = async (c: Context) => {
+export const getBookingById = async (c: AuthContext) => {
   try {
     if (!c.user) {
       return c.json({ error: 'Authentication required.' }, 401);
@@ -119,7 +120,7 @@ export const getBookingById = async (c: Context) => {
 };
 
 // Get user's bookings (for authenticated user)
-export const getUserBookings = async (c: Context) => {
+export const getUserBookings = async (c: AuthContext) => {
   try {
     if (!c.user) {
       return c.json({ error: 'Authentication required.' }, 401);
@@ -227,7 +228,7 @@ export const updateBooking = async (c: Context) => {
 };
 
 // Cancel booking
-export const cancelBooking = async (c: Context) => {
+export const cancelBooking = async (c: AuthContext) => {
   try {
     if (!c.user) {
       return c.json({ error: 'Authentication required.' }, 401);

@@ -23,4 +23,5 @@ vehiclesRouter.put('/:id', adminRoleAuth, updateVehicle);
 vehiclesRouter.patch('/:id/status', adminRoleAuth, updateVehicleStatus);
 vehiclesRouter.delete('/:id', adminRoleAuth, deleteVehicle);
 
+
 export default vehiclesRouter;

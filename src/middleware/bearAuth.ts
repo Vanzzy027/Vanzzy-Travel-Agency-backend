@@ -18,10 +18,14 @@ type UserRole = 'admin' | 'user' | 'both'|'superAdmin';
 
 
 declare module "hono" {
-    interface Context {
+    // Hono's Context is a generic interface — augment it including generics so TS recognizes the property
+    interface AuthContext<State = any, Custom = any, Bindings = {}> {
         user?: DecodedToken; 
     }
 }
+
+// Also export a helper type for controllers to use when they need a typed context
+export type AuthContext = import('hono').Context & { user?: DecodedToken };
 
 export const verifyToken = async (token: string, secret: string): Promise<DecodedToken | null> => {
     try {
@@ -65,12 +69,12 @@ export const authMiddleware = async (c: Context, next: Next, requiredRole: UserR
     if (requiredRole === "both") {
         // Updated logic to include 'superAdmin' for "both" roles check
         if (decoded.role === "admin" || decoded.role === "user" || decoded.role === "superAdmin") {
-            c.user = decoded; 
+            (c as AuthContext).user = decoded; 
             return next(); 
         }
     } else if (decoded.role === requiredRole) {
         // User has the exact required role
-        c.user = decoded; 
+        (c as AuthContext).user = decoded; 
         return next(); 
     }
 

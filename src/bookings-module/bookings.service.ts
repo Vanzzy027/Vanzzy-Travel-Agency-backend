@@ -186,7 +186,9 @@ export const getAllBookingsService = async (filters?: BookingFilters): Promise<B
         vs.manufacturer as vehicle_manufacturer,
         vs.model as vehicle_model,
         vs.year as vehicle_year,
-        vs.color as vehicle_color
+        vs.color as vehicle_color,
+        vs.images as vehicle_images,
+        vs.vehicle_type
       FROM Bookings b
       INNER JOIN Users u ON b.user_id = u.user_id
       INNER JOIN Vehicles v ON b.vehicle_id = v.vehicle_id
