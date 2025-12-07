@@ -8,7 +8,8 @@ export const UserRegistrationSchema = z.object({
     phone_number: z.string().regex(/^\+?254\d{9}$/, "Invalid Kenyan phone number format (e.g., +254XXXXXXXX)."),
     password: z.string().min(6, "Password must be at least 8 characters long."),
     password_confirm: z.string().min(6, "Password confirmation is required."), // 💡 FIX: Added missing comma
-    status: z.enum(["active", "inactive", "banned"]).optional()
+    status: z.enum(["active", "inactive", "banned"]).optional(),
+    
 
 }).refine(data => data.password === data.password_confirm, {
     message: "Passwords do not match.",
@@ -22,6 +23,8 @@ export const UserUpdateSchema = z.object({
     email: z.string().email("Invalid email format.").optional(), 
     status: z.enum(["active", "inactive", "banned"]).optional(),
     phone_number: z.string().regex(/^\+?254\d{9}$/, "Invalid Kenyan phone number format (e.g., +254XXXXXXXXX).").optional(),
+    photo: z.string().url("Photo must be a valid URL").optional(), // Add this
+    address: z.string().optional(),
 
     role: z.enum(['superAdmin', 'admin', 'user']).optional(),
     
@@ -51,4 +54,5 @@ interface UserPayload {
     email: string;
     role: string; 
     address: string;
+    photo: string;
 }

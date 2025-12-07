@@ -188,27 +188,54 @@ export const updateVehicleStatus = async (c: Context) => {
   }
 };
 
-// Delete vehicle
+// // Delete vehicle
+// export const deleteVehicle = async (c: Context) => {
+//   try {
+//     const id = parseInt(c.req.param('id'));
+    
+//     if (isNaN(id) || id <= 0) {
+//       return c.json({ error: "Invalid vehicle ID" }, 400);
+//     }
+
+//     const deleted = await deleteVehicleService(id);
+    
+//     if (!deleted) {
+//       return c.json({ error: "Vehicle not found" }, 404);
+//     }
+
+//     return c.json({
+//       message: "Vehicle deleted successfully"
+//     }, 200);
+
+//   } catch (error: any) {
+//     console.error("Error deleting vehicle:", error);
+//     return c.json({ error: error.message || "Internal server error" }, 500);
+//   }
+// };
+// Delete vehicle controller function
 export const deleteVehicle = async (c: Context) => {
   try {
+    // Hono params are strings, we parse them
     const id = parseInt(c.req.param('id'));
     
     if (isNaN(id) || id <= 0) {
-      return c.json({ error: "Invalid vehicle ID" }, 400);
+      return c.json({ error: "Invalid vehicle ID provided" }, 400);
     }
 
     const deleted = await deleteVehicleService(id);
     
     if (!deleted) {
+      // If service returns false, the record wasn't found in the DB
       return c.json({ error: "Vehicle not found" }, 404);
     }
 
     return c.json({
-      message: "Vehicle deleted successfully"
+      message: `Vehicle ${id} deleted successfully`
     }, 200);
 
-  } catch (error: any) {
-    console.error("Error deleting vehicle:", error);
-    return c.json({ error: error.message || "Internal server error" }, 500);
+  } catch (error) {
+    console.error("Error deleting vehicle in controller:", error);
+    // Return a generic internal error message to the client for safety
+    return c.json({ error: "Internal server error during deletion process" }, 500);
   }
 };

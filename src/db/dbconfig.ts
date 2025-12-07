@@ -73,13 +73,24 @@ const initDatabaseConnection = async () => {
     }
 };
 
-// Export to get the current database pool
+// Get database pool
 export const getDbPool = (): ConnectionPool => {
     if (!globalPool || !globalPool.connected) {
         throw new Error('Database not connected. Call initDatabaseConnection() first.');
     }
     return globalPool;
 };
+
+// Get a new request instance
+export const getRequest = (): sql.Request => {
+
+    if (!globalPool || !globalPool.connected) {
+        throw new Error('Database not connected. Call initDatabaseConnection() first.');
+    }
+    return new sql.Request(globalPool);
+};
+
+
 
 export default initDatabaseConnection; 
 

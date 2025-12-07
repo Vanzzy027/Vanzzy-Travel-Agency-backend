@@ -24,6 +24,7 @@ export interface VehicleWithSpecs extends Vehicle {
   color?: string;
   features?: string;
   images?: string;
+  vehicle_type?: String;
 }
 
 export interface VehicleUpdateData {
@@ -302,7 +303,7 @@ export const updateVehicleStatusService = async (id: number, status: string): Pr
   }
 };
 
-// Delete vehicle
+// Delete vehicle service function
 export const deleteVehicleService = async (id: number): Promise<boolean> => {
   try {
     const pool = await getDbPool();
@@ -313,10 +314,12 @@ export const deleteVehicleService = async (id: number): Promise<boolean> => {
       .input('id', sql.Int, id)
       .query(query);
 
+    // returns true if one or more rows were affected
     return result.rowsAffected[0] > 0;
 
-  } catch (error: any) {
-    console.error("Error deleting vehicle:", error);
-    throw new Error("Failed to delete vehicle");
+  } catch (error) { // Type is unknown by default in modern TS
+    console.error("Error deleting vehicle in service layer:", error);
+    // Rethrow a more specific error if desired, or a generic one
+    throw new Error("Failed to delete vehicle due to database error");
   }
 };

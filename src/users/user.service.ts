@@ -31,6 +31,7 @@ export interface UserUpdateData {
     role?: 'user' | 'admin' | 'superAdmin';
     status?: 'active' | 'inactive' | 'banned';
     verified?: boolean;
+    password: string;
 }
 
 // Get All Users Service
@@ -53,7 +54,7 @@ export const getAllUsersService = async (): Promise<any[]> => {
             national_id,
             created_at,
             updated_at
-        FROM Users
+        FROM Users ORDER BY created_at DESC
     `;
 
     try {
@@ -301,7 +302,7 @@ export const changeUserRoleService = async (user_id: string, role: string): Prom
     
     const result = await pool.request()
       .input('role', sql.NVarChar(20), role)
-      .input('user_id', sql.Int, user_id)
+      .input('user_id', sql.UniqueIdentifier, user_id)
       .query(query);
       
     return result.rowsAffected[0] > 0;
@@ -315,6 +316,42 @@ export const changeUserRoleService = async (user_id: string, role: string): Prom
 
 //Retrieve a user record by their user_id.
 
+// export const getUserByIdService = async (user_id: string): Promise<Omit<UserDBRecord, 'password'> | null> => {
+//     try {
+//         const pool = getDbPool();
+//         const query = `
+//             SELECT 
+//                 user_id, 
+//                 first_name, 
+//                 last_name, 
+//                 email, 
+//                 contact_phone, 
+//                 role, 
+//                 created_at, 
+//                 updated_at
+//             FROM 
+//                 Users 
+//             WHERE 
+//                 user_id = @user_id;
+//         `;
+        
+//         const result = await pool.request()
+//             .input('user_id', sql.Int, user_id)
+//             .query(query);
+
+//         if (result.recordset.length === 0) {
+//             return null;
+//         }
+
+//         return result.recordset[0] as Omit<UserDBRecord, 'password'>;
+
+//     } catch (error) {
+//         console.error('Database error in getUserByIdService:', error);
+//         throw new Error('Failed to retrieve user profile.');
+//     }
+// };
+
+// In user.service.ts - fix the getUserByIdService function
 export const getUserByIdService = async (user_id: string): Promise<Omit<UserDBRecord, 'password'> | null> => {
     try {
         const pool = getDbPool();
@@ -324,8 +361,13 @@ export const getUserByIdService = async (user_id: string): Promise<Omit<UserDBRe
                 first_name, 
                 last_name, 
                 email, 
-                contact_phone, 
-                role, 
+                contact_phone,
+                address,
+                photo,
+                role,
+                status,
+                verified,
+                national_id,
                 created_at, 
                 updated_at
             FROM 
@@ -335,22 +377,25 @@ export const getUserByIdService = async (user_id: string): Promise<Omit<UserDBRe
         `;
         
         const result = await pool.request()
-            .input('user_id', sql.Int, user_id)
+            .input('user_id', sql.UniqueIdentifier, user_id) // Changed from sql.Int to sql.UniqueIdentifier
             .query(query);
 
         if (result.recordset.length === 0) {
             return null;
         }
 
-        return result.recordset[0] as Omit<UserDBRecord, 'password'>;
+        // Convert BIT → boolean for verified
+        const user = result.recordset[0];
+        return {
+            ...user,
+            verified: Boolean(user.verified)
+        };
 
     } catch (error) {
         console.error('Database error in getUserByIdService:', error);
         throw new Error('Failed to retrieve user profile.');
     }
 };
-
-
 
 
 
@@ -364,7 +409,7 @@ export const deleteUserService = async (user_id: string): Promise<boolean> => {
 
     try {
         const result = await db.request()
-            .input('user_id', sql.Int, user_id)
+            .input('user_id', sql.UniqueIdentifier, user_id)
             .query(query);
 
         return result.rowsAffected[0] === 1; 
@@ -377,15 +422,66 @@ export const deleteUserService = async (user_id: string): Promise<boolean> => {
 
 
 
-//Update user profile information based on provided data.
+// //Update user profile information based on provided data.
+// export const updateUserService = async (
+//     user_id: string, 
+//     data: { first_name?: string, last_name?: string, contact_phone?: string }
+// ): Promise<Omit<UserDBRecord, 'password'> | null> => {
+    
+//     const pool = getDbPool();
+//     let query = 'UPDATE Users SET updated_at = GETDATE()';
+//     const request = pool.request().input('user_id', sql.UniqueIdentifier, user_id);
+
+//     if (data.first_name) {
+//         query += ', first_name = @first_name';
+//         request.input('first_name', sql.NVarChar(50), data.first_name);
+//     }
+//     if (data.last_name) {
+//         query += ', last_name = @last_name';
+//         request.input('last_name', sql.NVarChar(50), data.last_name);
+//     }
+//     if (data.contact_phone) {
+//         query += ', contact_phone = @contact_phone';
+//         request.input('contact_phone', sql.NVarChar(15), data.contact_phone);
+//     }
+
+//     query += ' OUTPUT INSERTED.user_id, INSERTED.first_name, INSERTED.last_name, INSERTED.email, INSERTED.contact_phone, INSERTED.user_type, INSERTED.created_at, INSERTED.updated_at WHERE user_id = @user_id;';
+    
+//     // Check if only user_id is set,,,, no fields were provided for update
+//     if (Object.keys(request.parameters).length <= 1) {
+//         throw new Error("No update data provided.");
+//     }
+    
+//     try {
+//         const result = await request.query(query);
+
+//         if (result.recordset.length === 0) {
+//             return null; // User not found
+//         }
+        
+//         return result.recordset[0] as Omit<UserDBRecord, 'password'>;
+//     } catch (error) {
+//         console.error('Database error in updateUserService:', error);
+//         throw new Error('Failed to update user profile.');
+//     }
+// };
+
+// Update user profile information based on provided data.
 export const updateUserService = async (
     user_id: string, 
-    data: { first_name?: string, last_name?: string, contact_phone?: string }
+    data: { 
+        first_name?: string, 
+        last_name?: string, 
+        contact_phone?: string,
+        photo?: string,
+        address?: string,
+        // Add other fields that exist in your Users table
+    }
 ): Promise<Omit<UserDBRecord, 'password'> | null> => {
     
     const pool = getDbPool();
     let query = 'UPDATE Users SET updated_at = GETDATE()';
-    const request = pool.request().input('user_id', sql.Int, user_id);
+    const request = pool.request().input('user_id', sql.UniqueIdentifier, user_id);
 
     if (data.first_name) {
         query += ', first_name = @first_name';
@@ -399,11 +495,36 @@ export const updateUserService = async (
         query += ', contact_phone = @contact_phone';
         request.input('contact_phone', sql.NVarChar(15), data.contact_phone);
     }
+    if (data.photo) {
+        query += ', photo = @photo';
+        request.input('photo', sql.NVarChar(sql.MAX), data.photo);
+    }
+    if (data.address) {
+        query += ', address = @address';
+        request.input('address', sql.NVarChar(200), data.address);
+    }
 
-    query += ' OUTPUT INSERTED.user_id, INSERTED.first_name, INSERTED.last_name, INSERTED.email, INSERTED.contact_phone, INSERTED.user_type, INSERTED.created_at, INSERTED.updated_at WHERE user_id = @user_id;';
+    // Updated OUTPUT clause based on your actual table structure
+    query += ` OUTPUT 
+        INSERTED.user_id, 
+        INSERTED.first_name, 
+        INSERTED.last_name, 
+        INSERTED.email, 
+        INSERTED.contact_phone, 
+        INSERTED.photo, 
+        INSERTED.address, 
+        INSERTED.role,           -- Changed from user_type to role
+        INSERTED.national_id,    -- Added based on your data
+        INSERTED.status,         -- Added based on your data
+        INSERTED.verified,       -- Added based on your data
+        INSERTED.created_at, 
+        INSERTED.updated_at 
+    WHERE user_id = @user_id;`;
     
-    // Check if only user_id is set,,,, no fields were provided for update
-    if (Object.keys(request.parameters).length <= 1) {
+    // Check if any update fields were provided
+    const hasUpdateFields = Object.keys(request.parameters).length > 1;
+    
+    if (!hasUpdateFields) {
         throw new Error("No update data provided.");
     }
     

@@ -8,6 +8,7 @@ export const BookingSchema = z.object({
   return_date: z.string().transform(str => new Date(str)).refine(date => !isNaN(date.getTime()), {
     message: "Invalid return date"
   }),
+  total_amount: z.number().min(0),
   booking_status: z.enum(['Pending', 'Confirmed', 'Completed', 'Cancelled', 'Late']).default('Pending')
 }).refine(data => data.return_date > data.booking_date, {
   message: "Return date must be after booking date",

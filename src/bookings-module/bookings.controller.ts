@@ -13,7 +13,25 @@ import {
 import { BookingSchema, BookingUpdateSchema } from "../validators/booking.validators";
 
 // Create new booking
-export const createBooking = async (c: AuthContext) => {
+
+
+
+//const bookingService = new createBookingService(); 
+
+
+
+// Define a custom context type with user
+type CustomContext = Context & {
+  user?: {
+    user_id: number;
+    email?: string;
+    total_amount: number;
+    // Add other user properties as needed
+  };
+};
+
+// Create new booking
+export const createBooking = async (c: CustomContext) => {
   try {
     if (!c.user) {
       return c.json({ error: 'Authentication required.' }, 401);
@@ -21,6 +39,8 @@ export const createBooking = async (c: AuthContext) => {
 
     const body = await c.req.json();
     const user_id = c.user.user_id;
+
+    console.log("📥 Received booking request:", body);
 
     // Validate input
     const validation = BookingSchema.safeParse(body);
@@ -32,12 +52,36 @@ export const createBooking = async (c: AuthContext) => {
       return c.json({ error: "Validation failed", details: errorMessages }, 400);
     }
 
+    // Prepare booking data - convert dates from string to Date objects
     const bookingData = {
-      ...validation.data,
-      user_id, total_amount: 0,
+      user_id: user_id.toString(), // Convert to string as expected by service
+      vehicle_id: validation.data.vehicle_id,
+      booking_date: new Date(validation.data.booking_date),
+      return_date: new Date(validation.data.return_date),
+      total_amount: validation.data.total_amount,
+      booking_status: 'Pending' as const // Set default status
     };
 
-    const booking = await createBookingService(bookingData);
+    console.log("📦 Booking data to save:", bookingData);
+
+    // Create instance of service and call the correct method
+    const bookingService = new createBookingService();
+    
+    // Check vehicle availability first
+    const isAvailable = await bookingService.checkVehicleAvailability(
+      bookingData.vehicle_id,
+      bookingData.booking_date,
+      bookingData.return_date
+    );
+
+    if (!isAvailable) {
+      return c.json({ 
+        error: "Vehicle is not available for the selected dates" 
+      }, 400);
+    }
+
+    // Create the booking
+    const booking = await bookingService.createBooking(bookingData);
     
     return c.json({
       message: "Booking created successfully 🎉",
@@ -45,10 +89,55 @@ export const createBooking = async (c: AuthContext) => {
     }, 201);
 
   } catch (error: any) {
-    console.error("Error creating booking:", error);
+    console.error("❌ Error creating booking:", error);
     return c.json({ error: error.message || "Internal server error" }, 500);
   }
 };
+
+// // Create new booking
+// export const createBooking = async (c: AuthContext) => {
+//   try {
+//     if (!c.user) {
+//       return c.json({ error: 'Authentication required.' }, 401);
+//     }
+
+//     const body = await c.req.json();
+//     const user_id = c.user.user_id;
+
+//     // Validate input
+//     const validation = BookingSchema.safeParse(body);
+//     if (!validation.success) {
+//       const errorMessages = validation.error.issues.map(issue => ({
+//         field: issue.path.join('.'),
+//         message: issue.message
+//       }));
+//       return c.json({ error: "Validation failed", details: errorMessages }, 400);
+//     }
+
+//     const bookingData = {
+//       ...validation.data,
+//       user_id,
+//       total_amount: 0,
+//     };
+
+//     // ⚡ Instantiate the service
+//     const bookingService = new createBookingService();
+
+//     // ⚡ Use the service instance to create booking
+//     // (you might need to add a method in the class to actually insert a booking if missing)
+//     const booking = await bookingService.createBooking(bookingData); 
+
+//     return c.json({
+//       message: "Booking created successfully 🎉",
+//       data: booking
+//     }, 201);
+
+//   } catch (error: any) {
+//     console.error("Error creating booking:", error);
+//     return c.json({ error: error.message || "Internal server error" }, 500);
+//   }
+// };
+
 
 // Get all bookings (Admin only)
 export const getAllBookings = async (c: Context) => {

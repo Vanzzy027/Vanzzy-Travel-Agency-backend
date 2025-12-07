@@ -1,5 +1,7 @@
 import { getDbPool } from "../db/dbconfig";
 import sql from 'mssql';
+import { getRequest } from "../db/dbconfig";
+
 
 export interface Booking {
   booking_id?: number;
@@ -114,59 +116,302 @@ export const calculateTotalAmount = async (vehicle_id: number, booking_date: Dat
 };
 
 // Create new booking
-export const createBookingService = async (data: Omit<Booking, 'booking_id'>): Promise<Booking> => {
-  try {
-    const pool = await getDbPool();
+// export const createBookingService = async (data: Omit<Booking, 'booking_id'>): Promise<Booking> => {
+//   try {
+//     const pool = await getDbPool();
     
-    // Check vehicle availability
-    const isAvailable = await checkVehicleAvailability(data.vehicle_id, data.booking_date, data.return_date);
-    if (!isAvailable) {
-      throw new Error("Vehicle is not available for the selected dates");
-    }
+//     // Check vehicle availability
+//     const isAvailable = await checkVehicleAvailability(data.vehicle_id, data.booking_date, data.return_date);
+//     if (!isAvailable) {
+//       throw new Error("Vehicle is not available for the selected dates");
+//     }
 
-    // Calculate total amount
-    const total_amount = await calculateTotalAmount(data.vehicle_id, data.booking_date, data.return_date);
+//     // Calculate total amount
+//     const total_amount = await calculateTotalAmount(data.vehicle_id, data.booking_date, data.return_date);
 
-    const query = `
-      INSERT INTO Bookings (
-        user_id, vehicle_id, booking_date, return_date, total_amount, booking_status
-      )
-      OUTPUT INSERTED.*
-      VALUES (
-        @user_id, @vehicle_id, @booking_date, @return_date, @total_amount, @booking_status
-      )
-    `;
+//     const query = `
+//       INSERT INTO Bookings (
+//         user_id, vehicle_id, booking_date, return_date, total_amount, booking_status
+//       )
+//       OUTPUT INSERTED.*
+//       VALUES (
+//         @user_id, @vehicle_id, @booking_date, @return_date, @total_amount, @booking_status
+//       )
+//     `;
 
-    const result = await pool.request()
-      .input('user_id', sql.UniqueIdentifier, data.user_id)
-      .input('vehicle_id', sql.Int, data.vehicle_id)
-      .input('booking_date', sql.DateTime, data.booking_date)
-      .input('return_date', sql.DateTime, data.return_date)
-      .input('total_amount', sql.Decimal(10, 2), total_amount)
-      .input('booking_status', sql.NVarChar, data.booking_status || 'Pending')
-      .query(query);
+//     const result = await pool.request()
+//       .input('user_id', sql.UniqueIdentifier, data.user_id)
+//       .input('vehicle_id', sql.Int, data.vehicle_id)
+//       .input('booking_date', sql.DateTime, data.booking_date)
+//       .input('return_date', sql.DateTime, data.return_date)
+//       .input('total_amount', sql.Decimal(10, 2), total_amount)
+//       .input('booking_status', sql.NVarChar, data.booking_status || 'Pending')
+//       .query(query);
 
-    // Update vehicle status to "Rented" if booking is confirmed
-    if (data.booking_status === 'Confirmed') {
-      await updateVehicleStatus(data.vehicle_id, 'Rented');
-    }
+//     // Update vehicle status to "Rented" if booking is confirmed
+//     if (data.booking_status === 'Confirmed') {
+//       await updateVehicleStatus(data.vehicle_id, 'Rented');
+//     }
 
-    return result.recordset[0] as Booking;
+//     return result.recordset[0] as Booking;
 
-  } catch (error: any) {
-    console.error("Error creating booking:", error);
+//   } catch (error: any) {
+//     console.error("Error creating booking:", error);
     
-    if (error.number === 547) { // Foreign key constraint
-      if (error.message.includes('user_id')) {
-        throw new Error("Invalid user ID");
-      } else if (error.message.includes('vehicle_id')) {
-        throw new Error("Invalid vehicle ID");
-      }
-    }
+//     if (error.number === 547) { // Foreign key constraint
+//       if (error.message.includes('user_id')) {
+//         throw new Error("Invalid user ID");
+//       } else if (error.message.includes('vehicle_id')) {
+//         throw new Error("Invalid vehicle ID");
+//       }
+//     }
     
-    throw new Error(error.message || "Failed to create booking");
+//     throw new Error(error.message || "Failed to create booking");
+//   }
+// };
+
+
+
+//createBookingService
+// src/bookings/booking.service.ts
+
+// export class createBookingService {
+//   async getBookingById(bookingId: number): Promise<Booking | null> {
+//     try {
+//       const request = getRequest();
+//       const query = `
+//         SELECT * FROM Bookings WHERE booking_id = @bookingId
+//       `;
+      
+//       request.input("bookingId", bookingId);
+//       const result = await request.query(query);
+      
+//       return result.recordset[0] || null;
+//     } catch (error) {
+//       console.error("Error getting booking by ID:", error);
+//       throw error;
+//     }
+//   }
+
+//   async updateBookingStatus(bookingId: number, status: string): Promise<Booking | null> {
+//     try {
+//       const request = getRequest();
+//       const query = `
+//         UPDATE Bookings 
+//         SET booking_status = @status, updated_at = GETDATE()
+//         WHERE booking_id = @bookingId;
+        
+//         SELECT * FROM Bookings WHERE booking_id = @bookingId;
+//       `;
+      
+//       request.input("bookingId", bookingId);
+//       request.input("status", status);
+//       const result = await request.query(query);
+      
+//       // Update vehicle status if booking is confirmed
+//       if (status === 'Confirmed') {
+//         await this.updateVehicleStatusByBooking(bookingId, 'Rented');
+//       } else if (status === 'Cancelled') {
+//         await this.updateVehicleStatusByBooking(bookingId, 'Available');
+//       }
+      
+//       return result.recordset[0] || null;
+//     } catch (error) {
+//       console.error("Error updating booking status:", error);
+//       throw error;
+//     }
+//   }
+
+//   private async updateVehicleStatusByBooking(bookingId: number, status: string): Promise<void> {
+//     try {
+//       const request = getRequest();
+//       const query = `
+//         UPDATE Vehicles 
+//         SET vehicle_status = @status
+//         WHERE vehicle_id = (
+//           SELECT vehicle_id FROM Bookings WHERE booking_id = @bookingId
+//         )
+//       `;
+      
+//       request.input("bookingId", bookingId);
+//       request.input("status", status);
+//       await request.query(query);
+//     } catch (error) {
+//       console.error("Error updating vehicle status:", error);
+//       // Don't throw - this is a secondary operation
+//     }
+//   }
+
+//   async checkVehicleAvailability(vehicleId: number, startDate: Date, endDate: Date): Promise<boolean> {
+//     try {
+//       const request = getRequest();
+//       const query = `
+//         SELECT COUNT(*) as overlap_count
+//         FROM Bookings 
+//         WHERE vehicle_id = @vehicleId
+//           AND booking_status IN ('Pending', 'Confirmed', 'Paid', 'Active')
+//           AND (
+//             (@startDate BETWEEN booking_date AND return_date)
+//             OR (@endDate BETWEEN booking_date AND return_date)
+//             OR (booking_date BETWEEN @startDate AND @endDate)
+//           )
+//       `;
+      
+//       request.input("vehicleId", vehicleId);
+//       request.input("startDate", startDate);
+//       request.input("endDate", endDate);
+      
+//       const result = await request.query(query);
+//       return result.recordset[0].overlap_count === 0;
+//     } catch (error) {
+//       console.error("Error checking vehicle availability:", error);
+//       throw error;
+//     }
+//   }
+// }
+
+export class createBookingService {
+  // ✅ Create a new booking
+  async createBooking(data: {
+    user_id: string;
+    vehicle_id: number;
+    booking_date: Date;
+    return_date: Date;
+    total_amount: number;
+    booking_status: 'Pending' | 'Confirmed' | 'Completed' | 'Cancelled' | 'Late';
+  }): Promise<Booking> {
+    try {
+      const request = getRequest();
+      const query = `
+        INSERT INTO Bookings (user_id, vehicle_id, booking_date, return_date, total_amount, booking_status)
+        OUTPUT INSERTED.*
+        VALUES (@user_id, @vehicle_id, @booking_date, @return_date, @total_amount, @booking_status)
+      `;
+
+      request.input("user_id", data.user_id);
+      request.input("vehicle_id", data.vehicle_id);
+      request.input("booking_date", data.booking_date);
+      request.input("return_date", data.return_date);
+      request.input("total_amount", data.total_amount);
+      request.input("booking_status", data.booking_status);
+
+      const result = await request.query(query);
+      return result.recordset[0];
+    } catch (error) {
+      console.error("Error creating booking:", error);
+      throw error;
+    }
   }
-};
+
+  // ✅ Get booking by ID
+  async getBookingById(bookingId: number): Promise<Booking | null> {
+    try {
+      const request = getRequest();
+      const query = `
+        SELECT * FROM Bookings WHERE booking_id = @bookingId
+      `;
+      request.input("bookingId", bookingId);
+      const result = await request.query(query);
+      return result.recordset[0] || null;
+    } catch (error) {
+      console.error("Error getting booking by ID:", error);
+      throw error;
+    }
+  }
+
+  // ✅ Update booking status
+  async updateBookingStatus(bookingId: number, status: string): Promise<Booking | null> {
+    try {
+      const request = getRequest();
+      const query = `
+        UPDATE Bookings 
+        SET booking_status = @status, updated_at = GETDATE()
+        WHERE booking_id = @bookingId;
+
+        SELECT * FROM Bookings WHERE booking_id = @bookingId;
+      `;
+      request.input("bookingId", bookingId);
+      request.input("status", status);
+      const result = await request.query(query);
+
+      // Update vehicle status automatically
+      if (status === 'Confirmed') {
+        await this.updateVehicleStatusByBooking(bookingId, 'Rented');
+      } else if (status === 'Cancelled') {
+        await this.updateVehicleStatusByBooking(bookingId, 'Available');
+      }
+
+      return result.recordset[0] || null;
+    } catch (error) {
+      console.error("Error updating booking status:", error);
+      throw error;
+    }
+  }
+
+  // ✅ Check if vehicle is available
+  async checkVehicleAvailability(vehicleId: number, startDate: Date, endDate: Date): Promise<boolean> {
+    try {
+      const request = getRequest();
+      const query = `
+        SELECT COUNT(*) AS overlap_count
+        FROM Bookings 
+        WHERE vehicle_id = @vehicleId
+          AND booking_status IN ('Pending', 'Confirmed', 'Paid', 'Active')
+          AND (
+            (@startDate BETWEEN booking_date AND return_date)
+            OR (@endDate BETWEEN booking_date AND return_date)
+            OR (booking_date BETWEEN @startDate AND @endDate)
+          )
+      `;
+      request.input("vehicleId", vehicleId);
+      request.input("startDate", startDate);
+      request.input("endDate", endDate);
+
+      const result = await request.query(query);
+      return result.recordset[0].overlap_count === 0;
+    } catch (error) {
+      console.error("Error checking vehicle availability:", error);
+      throw error;
+    }
+  }
+
+  // ✅ Update vehicle status by booking
+  private async updateVehicleStatusByBooking(bookingId: number, status: 'Available' | 'Rented' | 'Maintenance' | 'Unavailable' | 'Banned') {
+    try {
+      const request = getRequest();
+      const query = `
+        UPDATE Vehicles
+        SET status = @status
+        WHERE vehicle_id = (
+          SELECT vehicle_id FROM Bookings WHERE booking_id = @bookingId
+        )
+      `;
+      request.input("bookingId", bookingId);
+      request.input("status", status);
+      await request.query(query);
+    } catch (error) {
+      console.error("Error updating vehicle status:", error);
+      // Don't throw - secondary operation
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Get all bookings with optional filtering
 export const getAllBookingsService = async (filters?: BookingFilters): Promise<BookingWithDetails[]> => {
