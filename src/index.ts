@@ -16,7 +16,7 @@ import { getAllUsers } from './users/user.controller.ts';
 import paymentRouter from './payments/payment.route';//receits and paystak
 import chatRouter from './Gemini/chatRoutes';
 import uploadRoutes from '../src/users/imageupload.routes.ts';
-
+import ticketRoute from '../src/customer-support-module/TicketRoutes.ts';
 // ... other code ...
 
 
@@ -38,6 +38,7 @@ app.use('/api/*', limiter);
 // CORS
 app.use('*', cors());
 
+
 // Root route
 app.get('/', (c) => c.text('4BIQ Travel Agency API is running!'));
 
@@ -51,7 +52,7 @@ app.route('/api/payments', paymentRouter);//receipts $payments from paystak
 //app.route('/api/payments', paymentsRouter);
 app.route('/api/upload', uploadRoutes);
 app.route('/api/chat', chatRouter); //openai
-
+app.route('/api/tickets', ticketRoute);
 // Admin API
 const adminApi = new Hono();
 adminApi.use('*', adminRoleAuth);
