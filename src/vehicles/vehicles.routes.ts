@@ -8,6 +8,7 @@ import {
   getAvailableVehicles,
   updateVehicleStatus
 } from './vehicles.controller';
+
 import { adminRoleAuth, bothRolesAuth } from '../middleware/bearAuth';
 
 const vehiclesRouter = new Hono();
@@ -22,6 +23,7 @@ vehiclesRouter.post('/', adminRoleAuth, createVehicle);
 vehiclesRouter.put('/:id', adminRoleAuth, updateVehicle);
 vehiclesRouter.patch('/:id/status', adminRoleAuth, updateVehicleStatus);
 vehiclesRouter.delete('/:id', adminRoleAuth, deleteVehicle);
+
 
 
 export default vehiclesRouter;

@@ -37,8 +37,10 @@ export const getAllTickets = async (c: Context) => {
     try {
         const tickets = await ticketService.getAllTickets();
         return c.json(tickets, 200);
-    } catch (error) {
-        return c.json({ error: "Failed to fetch all tickets" }, 500);
+    } catch (error: any) {
+        // 🔴 ADD THIS LOGGING
+        console.error("Error in getAllTickets:", error); 
+        return c.json({ error: "Failed to fetch all tickets", details: error.message }, 500);
     }
 };
 

@@ -42,10 +42,15 @@ export class TicketService {
     async getAllTickets() {
         const request = getRequest();
         
+        // 🔴 CHANGED: u.full_name -> CONCAT(u.first_name, ' ', u.last_name) as full_name
+        // 🔴 CHANGED: Added LEFT JOIN (safer if a user was deleted)
         const result = await request.query(`
-            SELECT t.*, u.email, u.full_name 
+            SELECT 
+                t.*, 
+                u.email, 
+                CONCAT(u.first_name, ' ', u.last_name) as full_name 
             FROM CustomerSupportTickets t
-            JOIN Users u ON t.user_id = u.user_id
+            LEFT JOIN Users u ON t.user_id = u.user_id
             ORDER BY 
                 CASE WHEN t.status = 'Open' THEN 1 ELSE 2 END, 
                 t.created_at DESC

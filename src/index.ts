@@ -17,7 +17,7 @@ import paymentRouter from './payments/payment.route';//receits and paystak
 import chatRouter from './Gemini/chatRoutes';
 import uploadRoutes from '../src/users/imageupload.routes.ts';
 import ticketRoute from '../src/customer-support-module/TicketRoutes.ts';
-// ... other code ...
+import reviewRoute from './Reviews & Rating/ReviewRoutes.ts';
 
 
 dotenv.config();
@@ -58,6 +58,7 @@ const adminApi = new Hono();
 adminApi.use('*', adminRoleAuth);
 //adminApi.get('/users', (c) => getAllUsers(c));
 app.route('/api/admin', adminApi);
+app.route('/api/reviews', reviewRoute);
 
 export default app;
 
