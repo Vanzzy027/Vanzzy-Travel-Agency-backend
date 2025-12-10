@@ -9,8 +9,7 @@ const {
     SQL_PASSWORD, 
     SQL_SERVER, 
     SQL_PORT, 
-    SQL_DB,
-    // Optional flags for Azure
+    SQL_DATABASE,
     SQL_ENCRYPT,
     SQL_TRUST_SERVER_CERTIFICATE 
 } = process.env;
@@ -19,7 +18,7 @@ const {
 assert(SQL_USER, 'SQL_USER is not defined in environment variables');
 assert(SQL_PASSWORD, 'SQL_PASSWORD is not defined in environment variables');
 assert(SQL_SERVER, 'SQL_SERVER is not defined in environment variables');
-assert(SQL_DB, 'SQL_DATABASE is not defined in environment variables');
+assert(SQL_DATABASE, 'SQL_DATABASE is not defined in environment variables');
 
 // Determine if we're connecting to Azure
 const isAzureServer = SQL_SERVER.includes('.database.windows.net');
@@ -27,31 +26,28 @@ const shouldEncrypt = SQL_ENCRYPT === 'true' || isAzureServer;
 const shouldTrustCertificate = SQL_TRUST_SERVER_CERTIFICATE === 'true' && !isAzureServer;
 
 console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-console.log(`🔗 Server: ${SQL_SERVER}`);
-console.log(`🔐 Encrypt: ${shouldEncrypt}`);
-console.log(`⚡ Azure: ${isAzureServer ? 'Yes' : 'No'}`);
+console.log(`🔗 Connecting to: ${isAzureServer ? 'Azure' : 'Local'} SQL Server`);
+console.log(`📡 Server: ${SQL_SERVER}`);
 
 // Single configuration object
-export const Config = {
-    sqlConfig: {
-        user: SQL_USER,
-        password: SQL_PASSWORD,
-        server: SQL_SERVER,
-        database: SQL_DB,
-        port: parseInt(SQL_PORT || '1433', 10),
-        connectionTimeout: isAzureServer ? 30000 : 15000,
-        requestTimeout: isAzureServer ? 30000 : 15000,
-        pool: {
-            max: 10,
-            min: 0,
-            idleTimeoutMillis: 30000
-        },
-        options: {
-            encrypt: shouldEncrypt,
-            trustServerCertificate: shouldTrustCertificate,
-            enableArithAbort: true,
-            connectTimeout: isAzureServer ? 30000 : 15000
-        }
+const sqlConfig = {
+    user: SQL_USER,
+    password: SQL_PASSWORD,
+    server: SQL_SERVER,
+    database: SQL_DATABASE,
+    port: parseInt(SQL_PORT || '1433', 10),
+    connectionTimeout: isAzureServer ? 30000 : 15000,
+    requestTimeout: isAzureServer ? 30000 : 15000,
+    pool: {
+        max: 10,
+        min: 0,
+        idleTimeoutMillis: 30000
+    },
+    options: {
+        encrypt: shouldEncrypt,
+        trustServerCertificate: shouldTrustCertificate,
+        enableArithAbort: true,
+        connectTimeout: isAzureServer ? 30000 : 15000
     }
 };
 
@@ -64,36 +60,28 @@ const initDatabaseConnection = async () => {
     }
 
     try {
-        console.log(`📡 Connecting to: ${Config.sqlConfig.server}:${Config.sqlConfig.port}`);
-        console.log(`📊 Database: ${Config.sqlConfig.database}`);
+        console.log(`📡 Connecting to database: ${sqlConfig.database}`);
+        console.log(`🔧 Using port: ${sqlConfig.port}, Encrypt: ${sqlConfig.options.encrypt}`);
         
-        globalPool = await sql.connect(Config.sqlConfig);
-        console.log('✅ Connected to SQL SERVER Database');
+        globalPool = await sql.connect(sqlConfig);
+        console.log('✅ Successfully connected to database');
         
         return globalPool;
     } catch (error: any) {
         console.error('❌ Database Connection Failed!');
         console.error('Error:', error.message);
-        console.error('\n🔧 Connection Details:');
-        console.error(`Server: ${SQL_SERVER}`);
-        console.error(`Database: ${SQL_DB}`);
-        console.error(`User: ${SQL_USER}`);
-        console.error(`Port: ${SQL_PORT || '1433'}`);
-        console.error(`Encrypt: ${shouldEncrypt}`);
         
         // Helpful troubleshooting tips
         if (isAzureServer) {
-            console.error('\n⚠️ Azure SQL Troubleshooting:');
-            console.error('1. Check firewall rules in Azure Portal');
-            console.error('2. Verify server name ends with .database.windows.net');
-            console.error('3. Ensure credentials are correct');
-            console.error('4. Check if database exists');
+            console.error('\n⚠️ For Azure SQL, check:');
+            console.error('1. Server: vankske-car-rental.database.windows.net');
+            console.error('2. Username: Vanzzy');
+            console.error('3. Firewall: Allow your IP in Azure Portal');
         } else {
-            console.error('\n⚠️ Local SQL Server Troubleshooting:');
-            console.error('1. Ensure SQL Server is running');
-            console.error('2. Enable TCP/IP in SQL Server Configuration Manager');
-            console.error('3. Try connecting with SQL Server Management Studio');
-            console.error('4. Check if "sa" account is enabled');
+            console.error('\n⚠️ For Local SQL Server, check:');
+            console.error('1. SQL Server is running on localhost:1433');
+            console.error('2. SQL Server Authentication is enabled');
+            console.error('3. Try: "sqllocaldb info" in terminal');
         }
         
         throw error;
@@ -107,27 +95,11 @@ export const getDbPool = (): sql.ConnectionPool => {
     return globalPool;
 };
 
-// Helper to get a new request
 export const getRequest = (): sql.Request => {
     if (!globalPool || !globalPool.connected) {
         throw new Error('Database not connected. Call initDatabaseConnection() first.');
     }
     return new sql.Request(globalPool);
-};
-
-// Health check
-export const checkDatabaseHealth = async (): Promise<boolean> => {
-    try {
-        if (!globalPool || !globalPool.connected) {
-            await initDatabaseConnection();
-        }
-        const request = getRequest();
-        const result = await request.query('SELECT 1 as status');
-        return result.recordset[0]?.status === 1;
-    } catch (error) {
-        console.error('Database health check failed:', error);
-        return false;
-    }
 };
 
 export default initDatabaseConnection;
