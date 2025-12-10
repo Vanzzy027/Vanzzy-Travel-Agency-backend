@@ -1,5 +1,5 @@
-import { Context } from "hono";
-import type { AuthContext } from "../middleware/bearAuth";
+import type { Context } from "hono";
+import type { AuthContext } from "../middleware/bearAuth.js";
 import {
   createBookingService,
   getAllBookingsService,
@@ -10,8 +10,8 @@ import {
   getUserBookingsService,
   getVehicleBookingsService,
   completeBookingService
-} from "./bookings.service";
-import { BookingSchema, BookingUpdateSchema } from "../validators/booking.validators";
+} from "./bookings.service.js";
+import { BookingSchema, BookingUpdateSchema } from "../validators/booking.validators.js";
 
 type CustomContext = Context & {
   user?: {

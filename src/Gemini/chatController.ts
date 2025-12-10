@@ -1,7 +1,7 @@
 // src/Gemini/chatController.ts - FINAL WORKING VERSION
-import { Context } from 'hono'; 
-import { GoogleGenerativeAI, Part } from "@google/generative-ai"; 
-import { toolsSchema, toolsFunctions } from "../utils/aiTools";
+import type { Context } from 'hono'; 
+import { GoogleGenerativeAI,type Part } from "@google/generative-ai"; 
+import { toolsSchema, toolsFunctions } from "../utils/aiTools.js";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY as string);
 const model = genAI.getGenerativeModel({ 

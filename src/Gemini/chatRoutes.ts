@@ -1,7 +1,7 @@
 // src/routes/chatRouter.ts
 import { Hono } from "hono"; 
-import { handleChat } from "../Gemini/chatController";
-import { userRoleAuth } from "../middleware/bearAuth"; // Import your middleware
+import { handleChat } from "../Gemini/chatController.js";
+import { userRoleAuth } from "../middleware/bearAuth.js"; // Import your middleware
 
 // Create a Hono app/router
 const chatRouter = new Hono();

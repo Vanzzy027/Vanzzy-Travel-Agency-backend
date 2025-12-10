@@ -1,7 +1,7 @@
 // src/payments/payment.service.ts
 import { get } from "http";
-import { PaymentRepository } from "./payment.repository";
-import { getDbPool } from "../db/dbconfig.ts";
+import { PaymentRepository } from "./payment.repository.js";
+import { getDbPool } from "../db/dbconfig.js";
 //import { updateBooking } from "../bookings-module/bookings.controller.ts";
 export interface PaymentData {
   booking_id: number;

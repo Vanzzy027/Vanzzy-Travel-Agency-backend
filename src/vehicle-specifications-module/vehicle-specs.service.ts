@@ -1,4 +1,4 @@
-import { getDbPool } from "../db/dbconfig";
+import { getDbPool } from "../db/dbconfig.js";
 import sql from 'mssql';
 
 export interface VehicleSpec {

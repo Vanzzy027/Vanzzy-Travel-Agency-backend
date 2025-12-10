@@ -7,9 +7,9 @@ import {
   deleteVehicle,
   getAvailableVehicles,
   updateVehicleStatus
-} from './vehicles.controller';
+} from './vehicles.controller.js';
 
-import { adminRoleAuth, bothRolesAuth } from '../middleware/bearAuth';
+import { adminRoleAuth, bothRolesAuth } from '../middleware/bearAuth.js';
 
 const vehiclesRouter = new Hono();
 

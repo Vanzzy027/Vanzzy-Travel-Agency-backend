@@ -1,4 +1,4 @@
-import { Context } from "hono";
+import type { Context } from "hono";
 import {
   createVehicleService,
   getAllVehiclesService,
@@ -7,8 +7,8 @@ import {
   deleteVehicleService,
   getAvailableVehiclesService,
   updateVehicleStatusService
-} from "./vehicles.service";
-import { VehicleSchema, VehicleStatusSchema } from "../validators/vehicle.validators";
+} from "./vehicles.service.js";
+import { VehicleSchema, VehicleStatusSchema } from "../validators/vehicle.validators.js";
 
 // Create new vehicle
 export const createVehicle = async (c: Context) => {

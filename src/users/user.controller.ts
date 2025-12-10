@@ -6,9 +6,9 @@ import {
     updateUserByIdService, 
     deleteUserService,
     changeUserRoleService 
-} from "./user.service";
-import { Context } from "hono";
-import { UserUpdateSchema, ChangeRoleSchema } from '../validators/user.validators';
+} from "./user.service.js";
+import type { Context } from "hono";
+import { UserUpdateSchema, ChangeRoleSchema } from '../validators/user.validators.js';
 
 // Define user interface
 interface UserPayload {

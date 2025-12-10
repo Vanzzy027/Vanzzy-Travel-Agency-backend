@@ -1,6 +1,6 @@
 import mssql from 'mssql';
-import { getRequest } from '../db/dbconfig'; // Use your existing helper
-import { CreateTicketDTO, UpdateTicketDTO } from './Ticket';
+import { getRequest } from '../db/dbconfig.js'; // Use your existing helper
+import type { CreateTicketDTO, UpdateTicketDTO } from './Ticket.js';
 
 export class TicketService {
 

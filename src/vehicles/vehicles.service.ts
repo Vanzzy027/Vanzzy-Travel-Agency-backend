@@ -1,6 +1,6 @@
-import { getDbPool } from "../db/dbconfig";
+import { getDbPool } from "../db/dbconfig.js";
 import sql from 'mssql';
-import { getRequest } from '../db/dbconfig';
+import { getRequest } from '../db/dbconfig.js';
 //import { CreateReviewDTO } from '../models/Review';
 
 export interface Vehicle {

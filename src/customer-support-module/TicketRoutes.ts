@@ -5,7 +5,7 @@ import {
     getAllTickets, 
     getTicketById, 
     updateTicketStatus 
-} from './ticketController';
+} from './ticketController.js';
 
 const ticketRoute = new Hono();
 

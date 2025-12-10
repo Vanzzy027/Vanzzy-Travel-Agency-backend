@@ -3,21 +3,21 @@ import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import { prometheus } from '@hono/prometheus';
-import { limiter } from './middleware/rateLimiter.ts';
-import { adminRoleAuth } from './middleware/bearAuth.ts';
-import initDatabaseConnection from './db/dbconfig.ts';
-import authRouter from './auth/auth.route.ts';
-import userRoutes from './users/user.route.ts';
+import { limiter } from './middleware/rateLimiter.js';
+import { adminRoleAuth } from './middleware/bearAuth.js';
+import initDatabaseConnection from './db/dbconfig.js';
+import authRouter from './auth/auth.route.js';
+import userRoutes from './users/user.route.js';
 import { cors } from 'hono/cors';
-import vehicleSpecsRouter from './vehicle-specifications-module/vehicle-specs.routes.ts';
-import vehiclesRouter from './vehicles/vehicles.routes.ts';
-import bookingsRouter from './bookings-module/bookings.routes.ts';
-import { getAllUsers } from './users/user.controller.ts';
-import paymentRouter from './payments/payment.route';//receits and paystak
-import chatRouter from './Gemini/chatRoutes';
-import uploadRoutes from '../src/users/imageupload.routes.ts';
-import ticketRoute from '../src/customer-support-module/TicketRoutes.ts';
-import reviewRoute from './Reviews & Rating/ReviewRoutes.ts';
+import vehicleSpecsRouter from './vehicle-specifications-module/vehicle-specs.routes.js';
+import vehiclesRouter from './vehicles/vehicles.routes.js';
+import bookingsRouter from './bookings-module/bookings.routes.js';
+import { getAllUsers } from './users/user.controller.js';
+import paymentRouter from './payments/payment.route.js';//receits and paystak
+import chatRouter from './Gemini/chatRoutes.js';
+import uploadRoutes from '../src/users/imageupload.routes.js';
+import ticketRoute from '../src/customer-support-module/TicketRoutes.js';
+import reviewRoute from './Reviews & Rating/ReviewRoutes.js';
 
 
 dotenv.config();
@@ -94,21 +94,21 @@ initDatabaseConnection()
 // import { logger } from 'hono/logger';
 // import * as dotenv from 'dotenv';
 // import { prometheus } from '@hono/prometheus';
-// import { limiter } from './middleware/rateLimiter.ts'; 
-// import { adminRoleAuth } from './middleware/bearAuth.ts'; 
-// import initDatabaseConnection from './db/dbconfig.ts'; 
-// import authRouter from './auth/auth.route.ts';
-// import userRoutes from './users/user.route.ts'; 
-// import { getAllUsers } from './users/user.controller.ts'; 
+// import { limiter } from './middleware/rateLimiter.js'; 
+// import { adminRoleAuth } from './middleware/bearAuth.js'; 
+// import initDatabaseConnection from './db/dbconfig.js'; 
+// import authRouter from './auth/auth.route.js';
+// import userRoutes from './users/user.route.js'; 
+// import { getAllUsers } from './users/user.controller.js'; 
 // import { cors } from 'hono/cors';
-// import vehicleSpecsRouter from './vehicle-specifications-module/vehicle-specs.routes.ts';
-// import vehiclesRouter from './vehicles/vehicles.routes.ts';
-// import bookingsRouter from './bookings-module/bookings.routes.ts';
-// import paymentsRouter from './payments-module/payments.routes.ts';
+// import vehicleSpecsRouter from './vehicle-specifications-module/vehicle-specs.routes.js';
+// import vehiclesRouter from './vehicles/vehicles.routes.js';
+// import bookingsRouter from './bookings-module/bookings.routes.js';
+// import paymentsRouter from './payments-module/payments.routes.js';
 
 // //mpesa
 // import express from "express";
-// import mpesaRoutes from "./mpesa/mpesa.route.ts";
+// import mpesaRoutes from "./mpesa/mpesa.route.js";
 
 
 

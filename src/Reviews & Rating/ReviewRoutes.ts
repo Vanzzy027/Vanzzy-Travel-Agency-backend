@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { 
     getEligibleBookings, createReview, getUserReviews, 
     getAllReviews, updateReviewStatus 
-} from '../Reviews & Rating/ReviewController';
+} from '../Reviews & Rating/ReviewController.js';
 
 const reviewRoute = new Hono();
 

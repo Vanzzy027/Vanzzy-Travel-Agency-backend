@@ -1,6 +1,6 @@
 // src/payments/payment.controller.ts
-import { Context } from "hono";
-import { PaymentService } from "./payment.service";
+import {type Context } from "hono";
+import { PaymentService } from "./payment.service.js";
 import jwt from 'jsonwebtoken';
 
 export class PaymentController {

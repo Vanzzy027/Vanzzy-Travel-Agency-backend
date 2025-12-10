@@ -1,7 +1,7 @@
 // src/routes/upload.routes.ts (Backend)
 import { Hono } from 'hono';
 import { v2 as cloudinary } from 'cloudinary';
-import { UploadApiResponse } from 'cloudinary';
+import type { UploadApiResponse } from 'cloudinary';
 
 //import multer from 'multer';
 

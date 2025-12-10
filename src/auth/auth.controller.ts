@@ -1,11 +1,11 @@
 import bcrypt from "bcryptjs";
-import { Context } from "hono";
-import { getUserByEmailService } from "../users/user.service"; 
-import * as authServices from "./auth.service";
+import type { Context } from "hono";
+import { getUserByEmailService } from "../users/user.service.js"; 
+import * as authServices from "./auth.service.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import { sendOtpEmail, sendNotificationEmail } from "../mailer/mailer";
-import { storeOTPService, verifyOTPService, updatePasswordService } from "../users/user.service";
+import { sendOtpEmail, sendNotificationEmail } from "../mailer/mailer.js";
+import { storeOTPService, verifyOTPService, updatePasswordService } from "../users/user.service.js";
 
 dotenv.config();
 

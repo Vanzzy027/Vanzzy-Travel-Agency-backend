@@ -1,4 +1,4 @@
-import { Context } from "hono";
+import type{ Context } from "hono";
 import {
   createVehicleSpecService,
   getAllVehicleSpecsService,
@@ -6,8 +6,8 @@ import {
   updateVehicleSpecService,
   deleteVehicleSpecService,
   getVehicleSpecsByTypeService
-} from "./vehicle-specs.service";
-import { VehicleSpecSchema } from "../validators/vehicle.validators";
+} from "./vehicle-specs.service.js";
+import { VehicleSpecSchema } from "../validators/vehicle.validators.js";
 
 // Create new vehicle specification
 export const createVehicleSpec = async (c: Context) => {

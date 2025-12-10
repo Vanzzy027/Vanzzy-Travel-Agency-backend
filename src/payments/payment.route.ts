@@ -1,8 +1,8 @@
 // src/payments/payment.route.ts
 import { Hono } from "hono";
-import { PaymentController } from "./payment.controller";
-import { PaymentService } from "./payment.service";
-import { PaymentRepository } from "./payment.repository";
+import { PaymentController } from "./payment.controller.js";
+import { PaymentService } from "./payment.service.js";
+import { PaymentRepository } from "./payment.repository.js";
 
 const paymentRouter = new Hono();
 

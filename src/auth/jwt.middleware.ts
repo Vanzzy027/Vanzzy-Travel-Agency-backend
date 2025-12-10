@@ -1,4 +1,4 @@
-import { Context, Next } from 'hono';
+import type { Context, Next } from 'hono';
 import jwt from 'jsonwebtoken';
 const { verify } = jwt;
 import * as dotenv from 'dotenv';

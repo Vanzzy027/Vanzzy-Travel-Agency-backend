@@ -1,5 +1,5 @@
-import { Context } from 'hono';
-import { TicketService } from './ticketService';
+import type { Context } from 'hono';
+import { TicketService } from './ticketService.js';
 
 const ticketService = new TicketService();
 

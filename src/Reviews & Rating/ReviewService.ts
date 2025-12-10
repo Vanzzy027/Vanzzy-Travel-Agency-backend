@@ -1,5 +1,5 @@
 import mssql from 'mssql';
-import { getRequest } from '../db/dbconfig';
+import { getRequest } from '../db/dbconfig.js';
 ///import { CreateReviewDTO } from '../models/Review';
 
 

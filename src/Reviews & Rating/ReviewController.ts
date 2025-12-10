@@ -1,5 +1,5 @@
-import { Context } from 'hono';
-import { ReviewService } from '../Reviews & Rating/ReviewService';
+import type { Context } from 'hono';
+import { ReviewService } from '../Reviews & Rating/ReviewService.js';
 
 const reviewService = new ReviewService();
 

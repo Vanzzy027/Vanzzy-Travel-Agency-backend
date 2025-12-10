@@ -9,8 +9,8 @@ import {
   getVehicleBookings,
   completeBooking,
   updateBookingStatusController // 👈 Import the new controller
-} from './bookings.controller';
-import { adminRoleAuth, bothRolesAuth } from '../middleware/bearAuth';
+} from './bookings.controller.js';
+import { adminRoleAuth, bothRolesAuth } from '../middleware/bearAuth.js';
 
 const bookingsRouter = new Hono();
 
