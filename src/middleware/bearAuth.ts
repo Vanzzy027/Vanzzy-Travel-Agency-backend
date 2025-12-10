@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { type Next, type Context } from "hono";
+import type {Next, Context } from "hono";
 import jwt from "jsonwebtoken";
 
 //Token payload

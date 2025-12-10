@@ -1,6 +1,6 @@
 // src/payments/payment.repository.ts
 import { get } from "http";
-import { getDbPool } from "../db/dbconfig.ts";
+import { getDbPool } from "../db/dbconfig.js";
 
 export class PaymentRepository {
   // In payment.repository.ts

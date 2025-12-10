@@ -1,4 +1,3 @@
-// src/payments/payment.service.ts
 import { get } from "http";
 import { PaymentRepository } from "./payment.repository.js";
 import { getDbPool } from "../db/dbconfig.js";

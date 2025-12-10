@@ -1,4 +1,3 @@
-// src/payments/paystack.webhook.ts
 import { Hono } from 'hono';
 import crypto from 'crypto';
 

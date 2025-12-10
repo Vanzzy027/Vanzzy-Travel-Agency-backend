@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
-import * as userControllers from './user.controller';
-import { bothRolesAuth, adminRoleAuth, superAdminRoleAuth } from '../middleware/bearAuth';
+import * as userControllers from './user.controller.js';
+import { bothRolesAuth, adminRoleAuth, superAdminRoleAuth } from '../middleware/bearAuth.js';
 
 const userRoutes = new Hono();
 

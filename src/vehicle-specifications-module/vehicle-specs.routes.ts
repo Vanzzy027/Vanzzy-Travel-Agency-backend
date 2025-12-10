@@ -5,8 +5,8 @@ import {
   getVehicleSpecById,
   updateVehicleSpec,
   deleteVehicleSpec
-} from './vehicle-specs.controller';
-import { adminRoleAuth } from '../middleware/bearAuth';
+} from './vehicle-specs.controller.js';
+import { adminRoleAuth } from '../middleware/bearAuth.js';
 
 const vehicleSpecsRouter = new Hono();
 

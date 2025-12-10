@@ -6,3 +6,4 @@ bookings.http
 payments.http
 vehicle.http
 payment.http
+Receipt.http
