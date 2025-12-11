@@ -1,10 +1,12 @@
-// src/utils/aiTools.ts
+
 import { createBookingService } from "../bookings-module/bookings.service.js";
 import { 
   getVehicleByIdService, 
   getAvailableVehiclesService,
   getAllVehiclesService 
 } from "../vehicles/vehicles.service.js";
+
+
 
 // Helper function to search vehicles with search query
 const searchAvailableVehicles = async (searchQuery: string) => {
