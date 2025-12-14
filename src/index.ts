@@ -17,7 +17,7 @@ import paymentRouter from './payments/payment.route.js';//receits and paystak
 import chatRouter from './Gemini/chatRoutes.js';
 //import uploadRoutes from '../src/users/imageupload.routes.js';
 import uploadRoutes from './users/imageupload.routes.js'; 
-import ticketRoute from '../src/customer-support-module/TicketRoutes.js';
+import ticketRoute from './customer-support-module/TicketRoutes.js';
 import reviewRoute from './Reviews & Rating/ReviewRoutes.js';
 
 
