@@ -1,9 +1,25 @@
-node_modules
-.env
-api.http
+# Dependency directories
 node_modules/
-bookings.http
-payments.http
-vehicle.http
-payment.http
-Receipt.http
+dist/
+
+# Environment variables and secrets
+.env
+
+# Local test files
+*.http
+
+
+
+
+# node_modules
+# .env
+# api.http
+# node_modules/
+# bookings.http
+# payments.http
+# vehicle.http
+# payment.http
+# Receipt.http
+# dist 
+# /dist
+# dist/
