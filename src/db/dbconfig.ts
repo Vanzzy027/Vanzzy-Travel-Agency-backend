@@ -104,6 +104,27 @@ export const getRequest = (): sql.Request => {
 
 export default initDatabaseConnection;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // import dotenv from 'dotenv';
 // import assert from 'assert';
 // import sql, { ConnectionPool } from 'mssql';
