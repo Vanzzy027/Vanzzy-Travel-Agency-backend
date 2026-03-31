@@ -110,13 +110,3 @@ export const handleChat = async (c: Context) => {
     }
 };
 
-
-
-
-//     } catch (error: any) {
-//         console.error("AI Error:", error);
-//         return c.json({ 
-//             error: "AI service error. Please try again." 
-//         }, 500);
-//     }
-// };
