@@ -236,14 +236,26 @@ export const getBookingByIdService = async (
   try {
     const pool = await getDbPool();
     const query = `
-      SELECT b.*, u.first_name as user_first_name, u.last_name as user_last_name, u.email as user_email, u.contact_phone as user_contact_phone,
-        v.vin_number as vehicle_vin_number, v.license_plate as vehicle_license_plate, v.rental_rate as vehicle_rental_rate,
-        vs.manufacturer as vehicle_manufacturer, vs.model as vehicle_model, vs.year as vehicle_year, vs.color as vehicle_color
-      FROM Bookings b
-      INNER JOIN Users u ON b.user_id = u.user_id
-      INNER JOIN Vehicles v ON b.vehicle_id = v.vehicle_id
-      INNER JOIN VehicleSpecifications vs ON v.vehicleSpec_id = vs.vehicleSpec_id
-      WHERE b.booking_id = @id
+      SELECT 
+  b.*, 
+  u.first_name as user_first_name, 
+  u.last_name as user_last_name, 
+  u.email as user_email, 
+  u.contact_phone as user_contact_phone,
+  v.vin_number as vehicle_vin_number, 
+  v.license_plate as vehicle_license_plate, 
+  v.rental_rate as vehicle_rental_rate,
+  vs.manufacturer as vehicle_manufacturer, 
+  vs.model as vehicle_model, 
+  vs.year as vehicle_year, 
+  vs.color as vehicle_color,
+  vs.images as vehicle_images,
+  vs.vehicle_type
+FROM Bookings b
+INNER JOIN Users u ON b.user_id = u.user_id
+INNER JOIN Vehicles v ON b.vehicle_id = v.vehicle_id
+INNER JOIN VehicleSpecifications vs ON v.vehicleSpec_id = vs.vehicleSpec_id
+WHERE b.booking_id = @id
     `;
     const result = await pool.request().input("id", sql.Int, id).query(query);
     return result.recordset.length
