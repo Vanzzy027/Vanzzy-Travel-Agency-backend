@@ -46,7 +46,7 @@ export const getUserReviews = async (c: Context) => {
 export const getAllReviews = async (c: Context) => {
   // Admin
   try {
-    const reviews = await reviewService.getAllReviews();
+    const reviews = (await reviewService.getAllReviews()) || [];
     return c.json(reviews, 200);
   } catch (e) {
     return c.json({ error: "Error" }, 500);

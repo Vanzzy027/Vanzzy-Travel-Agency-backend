@@ -80,7 +80,7 @@ export const createBooking = async (c: CustomContext) => {
 // ✅ UPDATE STATUS (Fixed Controller)
 export const updateBookingStatusController = async (c: Context) => {
   try {
-    const id = parseInt(c.req.param("id"));
+    const id = parseInt(c.req.param("id")) || 0;
     const body = await c.req.json();
     const { booking_status } = body;
 
@@ -142,7 +142,7 @@ export const getBookingById = async (c: AuthContext) => {
   try {
     if (!c.user) return c.json({ error: "Authentication required." }, 401);
 
-    const id = parseInt(c.req.param("id"));
+    const id = parseInt(c.req.param("id")) || 0;
     const user_id = c.user.user_id;
     const user_role = c.user.role;
 
@@ -202,7 +202,7 @@ export const getUserBookings = async (c: AuthContext) => {
 // Get vehicle bookings
 export const getVehicleBookings = async (c: Context) => {
   try {
-    const vehicle_id = parseInt(c.req.param("vehicleId"));
+    const vehicle_id = parseInt(c.req.param("vehicleId")) || 0;
     const { status, page = "1", limit = "10" } = c.req.query();
 
     if (isNaN(vehicle_id) || vehicle_id <= 0)
@@ -233,7 +233,7 @@ export const getVehicleBookings = async (c: Context) => {
 // Update booking (Generic)
 export const updateBooking = async (c: Context) => {
   try {
-    const id = parseInt(c.req.param("id"));
+    const id = parseInt(c.req.param("id")) || 0;
     if (isNaN(id) || id <= 0)
       return c.json({ error: "Invalid booking ID" }, 400);
 
@@ -268,7 +268,7 @@ export const cancelBooking = async (c: AuthContext) => {
   try {
     if (!c.user) return c.json({ error: "Authentication required." }, 401);
 
-    const id = parseInt(c.req.param("id"));
+    const id = parseInt(c.req.param("id")) || 0;
     const user_id = c.user.user_id;
     const user_role = c.user.role;
 
@@ -297,7 +297,7 @@ export const cancelBooking = async (c: AuthContext) => {
 // Complete booking
 export const completeBooking = async (c: Context) => {
   try {
-    const id = parseInt(c.req.param("id"));
+    const id = parseInt(c.req.param("id")) || 0;
     if (isNaN(id) || id <= 0)
       return c.json({ error: "Invalid booking ID" }, 400);
 
