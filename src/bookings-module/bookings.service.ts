@@ -63,8 +63,14 @@ const parseImages = (images: any): string[] => {
     if (Array.isArray(images)) return images;
 
     if (typeof images === "string") {
-      const parsed = JSON.parse(images);
-      return Array.isArray(parsed) ? parsed : [];
+      // Try JSON first
+      try {
+        const parsed = JSON.parse(images);
+        if (Array.isArray(parsed)) return parsed;
+      } catch {}
+
+      // Fallback: comma-separated string
+      return images.split(",").map((img) => img.trim());
     }
 
     return [];
@@ -281,7 +287,10 @@ WHERE b.booking_id = @id
     `;
     const result = await pool.request().input("id", sql.Int, id).query(query);
     return result.recordset.length
-      ? (result.recordset[0] as BookingWithDetails)
+      ? {
+          ...result.recordset[0],
+          vehicle_images: parseImages(result.recordset[0].vehicle_images),
+        }
       : null;
   } catch (error: any) {
     console.error("Error retrieving booking:", error);
