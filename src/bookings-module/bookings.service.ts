@@ -30,7 +30,7 @@ export interface BookingWithDetails extends Booking {
   vehicle_model?: string;
   vehicle_year?: number;
   vehicle_color?: string;
-  vehicle_images?: string;
+  vehicle_images?: string[];
   vehicle_type?: string;
 }
 
@@ -54,6 +54,25 @@ export interface BookingFilters {
 }
 
 // --- HELPER FUNCTIONS ---
+
+// This function helps to ensure images are returned as arrays (if stored as JSON strings)
+const parseImages = (images: any): string[] => {
+  if (!images) return [];
+
+  try {
+    if (Array.isArray(images)) return images;
+
+    if (typeof images === "string") {
+      const parsed = JSON.parse(images);
+      return Array.isArray(parsed) ? parsed : [];
+    }
+
+    return [];
+  } catch (err) {
+    console.warn("Failed to parse images:", images);
+    return [];
+  }
+};
 
 export const checkVehicleAvailability = async (
   vehicle_id: number,
@@ -223,7 +242,10 @@ export const getAllBookingsService = async (
     request.input("limit", sql.Int, filters?.limit || 10);
 
     const result = await request.query(query);
-    return result.recordset as BookingWithDetails[];
+    return result.recordset.map((b: any) => ({
+      ...b,
+      vehicle_images: parseImages(b.vehicle_images),
+    }));
   } catch (error: any) {
     console.error("Error retrieving bookings:", error);
     throw new Error("Failed to retrieve bookings");
@@ -309,7 +331,10 @@ export const getUserBookingsService = async (
     request.input("limit", sql.Int, filters?.limit || 10);
 
     const result = await request.query(query);
-    return result.recordset as BookingWithDetails[];
+    return result.recordset.map((b: any) => ({
+      ...b,
+      vehicle_images: parseImages(b.vehicle_images),
+    }));
   } catch (error: any) {
     console.error("Error retrieving user bookings:", error);
     throw new Error("Failed to retrieve user bookings");
@@ -345,7 +370,10 @@ export const getVehicleBookingsService = async (
     request.input("limit", sql.Int, filters?.limit || 10);
 
     const result = await request.query(query);
-    return result.recordset as BookingWithDetails[];
+    return result.recordset.map((b: any) => ({
+      ...b,
+      vehicle_images: parseImages(b.vehicle_images),
+    }));
   } catch (error: any) {
     console.error("Error retrieving vehicle bookings:", error);
     throw new Error("Failed to retrieve vehicle bookings");
