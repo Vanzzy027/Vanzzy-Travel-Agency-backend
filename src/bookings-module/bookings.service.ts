@@ -30,6 +30,8 @@ export interface BookingWithDetails extends Booking {
   vehicle_model?: string;
   vehicle_year?: number;
   vehicle_color?: string;
+  vehicle_images?: string;
+  vehicle_type?: string;
 }
 
 export interface BookingUpdateData {
