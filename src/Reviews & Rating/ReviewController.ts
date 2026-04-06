@@ -56,7 +56,7 @@ export const getAllReviews = async (c: Context) => {
 export const updateReviewStatus = async (c: Context) => {
   // Admin
   try {
-    const id = parseInt(c.req.param("id")) || 0;
+    const id = parseInt(c.req.param("id"))!;
     const { status, is_featured } = await c.req.json();
     await reviewService.updateReviewStatus(id, status, is_featured);
     return c.json({ message: "Updated" }, 200);
