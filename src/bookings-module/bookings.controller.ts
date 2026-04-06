@@ -114,7 +114,7 @@ export const getAllBookings = async (c: Context) => {
     } = c.req.query();
 
     const bookings = await getAllBookingsService({
-      status: status as string,
+      status: status || undefined,
       user_id: user_id as string,
       vehicle_id: vehicle_id ? parseInt(vehicle_id) : undefined,
       page: parseInt(page),
@@ -142,7 +142,9 @@ export const getBookingById = async (c: AuthContext) => {
   try {
     if (!c.user) return c.json({ error: "Authentication required." }, 401);
 
-    const id = parseInt(c.req.param("id"))!;
+    const idParam = c.req.param("id");
+    if (!idParam) return c.json({ error: "ID is required" }, 400);
+    const id = parseInt(idParam);
     const user_id = c.user.user_id;
     const user_role = c.user.role;
 
@@ -178,7 +180,7 @@ export const getUserBookings = async (c: AuthContext) => {
     const { status, page = "1", limit = "10" } = c.req.query();
 
     const bookings = await getUserBookingsService(user_id, {
-      status: status as string,
+      status: status || undefined,
       page: parseInt(page),
       limit: parseInt(limit),
     });
@@ -202,14 +204,16 @@ export const getUserBookings = async (c: AuthContext) => {
 // Get vehicle bookings
 export const getVehicleBookings = async (c: Context) => {
   try {
-    const vehicle_id = parseInt(c.req.param("vehicleId")) || 0;
+    const vehicleIdParam = c.req.param("vehicleId");
+    if (!vehicleIdParam) return c.json({ error: "Vehicle ID is required" }, 400);
+    const vehicle_id = parseInt(vehicleIdParam);
     const { status, page = "1", limit = "10" } = c.req.query();
 
     if (isNaN(vehicle_id) || vehicle_id <= 0)
       return c.json({ error: "Invalid vehicle ID" }, 400);
 
     const bookings = await getVehicleBookingsService(vehicle_id, {
-      status: status as string,
+      status: status || undefined,
       page: parseInt(page),
       limit: parseInt(limit),
     });
@@ -233,7 +237,9 @@ export const getVehicleBookings = async (c: Context) => {
 // Update booking (Generic)
 export const updateBooking = async (c: Context) => {
   try {
-    const id = parseInt(c.req.param("id"))!;
+    const idParam = c.req.param("id");
+    if (!idParam) return c.json({ error: "ID is required" }, 400);
+    const id = parseInt(idParam);
     if (isNaN(id) || id <= 0)
       return c.json({ error: "Invalid booking ID" }, 400);
 
@@ -268,7 +274,9 @@ export const cancelBooking = async (c: AuthContext) => {
   try {
     if (!c.user) return c.json({ error: "Authentication required." }, 401);
 
-    const id = parseInt(c.req.param("id"))!;
+    const idParam = c.req.param("id");
+    if (!idParam) return c.json({ error: "ID is required" }, 400);
+    const id = parseInt(idParam);
     const user_id = c.user.user_id;
     const user_role = c.user.role;
 
@@ -297,7 +305,9 @@ export const cancelBooking = async (c: AuthContext) => {
 // Complete booking
 export const completeBooking = async (c: Context) => {
   try {
-    const id = parseInt(c.req.param("id"))!;
+    const idParam = c.req.param("id");
+    if (!idParam) return c.json({ error: "ID is required" }, 400);
+    const id = parseInt(idParam);
     if (isNaN(id) || id <= 0)
       return c.json({ error: "Invalid booking ID" }, 400);
 

@@ -56,7 +56,10 @@ export const getAllReviews = async (c: Context) => {
 export const updateReviewStatus = async (c: Context) => {
   // Admin
   try {
-    const id = parseInt(c.req.param("id"))!;
+    const idParam = c.req.param("id");
+    if (!idParam) return c.json({ error: "ID is required" }, 400);
+    const id = parseInt(idParam);
+    if (isNaN(id)) return c.json({ error: "Invalid ID" }, 400);
     const { status, is_featured } = await c.req.json();
     await reviewService.updateReviewStatus(id, status, is_featured);
     return c.json({ message: "Updated" }, 200);
