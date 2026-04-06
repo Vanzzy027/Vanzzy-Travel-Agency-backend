@@ -80,7 +80,9 @@ export const createBooking = async (c: CustomContext) => {
 // ✅ UPDATE STATUS (Fixed Controller)
 export const updateBookingStatusController = async (c: Context) => {
   try {
-    const id = parseInt(c.req.param("id"))!;
+    const idParam = c.req.param("id");
+    if (!idParam) return c.json({ error: "ID is required" }, 400);
+    const id = parseInt(idParam);
     const body = await c.req.json();
     const { booking_status } = body;
 
@@ -205,7 +207,8 @@ export const getUserBookings = async (c: AuthContext) => {
 export const getVehicleBookings = async (c: Context) => {
   try {
     const vehicleIdParam = c.req.param("vehicleId");
-    if (!vehicleIdParam) return c.json({ error: "Vehicle ID is required" }, 400);
+    if (!vehicleIdParam)
+      return c.json({ error: "Vehicle ID is required" }, 400);
     const vehicle_id = parseInt(vehicleIdParam);
     const { status, page = "1", limit = "10" } = c.req.query();
 
