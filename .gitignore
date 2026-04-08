@@ -8,7 +8,11 @@ dist/
 # Local test files
 *.http
 
-
+apo.http
+payment.http
+payments.http
+bookings.http
+vehicle.http
 
 
 # node_modules
