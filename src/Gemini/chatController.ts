@@ -3,7 +3,7 @@ import type { Context } from "hono";
 import OpenAI from "openai";
 import type { ChatCompletionMessageToolCall } from "openai/resources/index.js";
 // @ts-ignore
-import { toolsSchema, toolsFunctions } from "../utils/aiTools";
+import { toolsSchema, toolsFunctions } from "../utils/ai-tools.types.js";
 
 const client = new OpenAI({
   apiKey: process.env.LLAMA_API_KEY,
