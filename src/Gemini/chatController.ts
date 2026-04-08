@@ -2,7 +2,8 @@
 import type { Context } from "hono";
 import OpenAI from "openai";
 import type { ChatCompletionMessageToolCall } from "openai/resources/index.js";
-import { toolsSchema, toolsFunctions } from "../utils/aiTools.js";
+// @ts-ignore
+import { toolsSchema, toolsFunctions } from "../utils/aiTools";
 
 const client = new OpenAI({
   apiKey: process.env.LLAMA_API_KEY,
@@ -89,7 +90,7 @@ export const handleChat = async (c: Context) => {
     const response = await client.chat.completions.create({
       model: process.env.LLAMA_MODEL || "llama-3.3-70b-versatile",
       messages,
-      tools: toolsSchema.map((s) => ({ type: "function", function: s })),
+      tools: toolsSchema.map((s: any) => ({ type: "function", function: s })),
       tool_choice: "auto",
       temperature: 0.1, // As deterministic as possible — reduces hallucination
     });
