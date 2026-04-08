@@ -88,15 +88,16 @@ export const toolsSchema = [
   },
   {
     name: "create_booking",
-    description: "Creates a confirmed car rental booking.",
+    description: "Create a new vehicle booking",
     parameters: {
       type: "object",
       properties: {
         vehicle_id: { type: "number" },
-        days: { type: "number" },
-        start_date: { type: "string" },
+        booking_date: { type: "string", description: "YYYY-MM-DD" },
+        return_date: { type: "string", description: "YYYY-MM-DD" },
+        total_amount: { type: "number" },
       },
-      required: ["vehicle_id", "days", "start_date"],
+      required: ["vehicle_id", "booking_date", "return_date", "total_amount"],
     },
   },
 ];
