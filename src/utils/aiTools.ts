@@ -96,12 +96,25 @@ export const toolsFunctions = {
         });
       }
 
+      // Inside the vehicles.map() in check_availability:
       const formatted = vehicles.map((v: Vehicle) => ({
         id: v.vehicle_id,
-        name: `${v.manufacturer} ${v.model} (${v.year})`,
-        price: v.rental_rate,
-        details: `${v.color}, ${v.transmission}, ${v.seating_capacity} seats`,
+        name: `${v.manufacturer} ${v.model}`,
+        year: v.year,
+        pricePerDay: v.rental_rate,
+        color: v.color || "N/A",
+        transmission: v.transmission || "N/A",
+        seats: v.seating_capacity || "N/A",
+        fuelType: v.fuel_type || "N/A",
+        features: v.features || "N/A", // 👈 add this line
+        type: v.vehicle_type || "N/A",
       }));
+      // const formatted = vehicles.map((v: Vehicle) => ({
+      //   id: v.vehicle_id,
+      //   name: `${v.manufacturer} ${v.model} (${v.year})`,
+      //   price: v.rental_rate,
+      //   details: `${v.color}, ${v.transmission}, ${v.seating_capacity} seats`,
+      // }));
 
       return JSON.stringify({
         success: true,

@@ -4,27 +4,61 @@ import OpenAI from "openai";
 import type { ChatCompletionMessageToolCall } from "openai/resources/index.js";
 import { toolsSchema, toolsFunctions } from "../utils/aiTools.js";
 
-// Initialize OpenAI client
+// Initialize OpenAI-compatible client (Groq)
 const client = new OpenAI({
   apiKey: process.env.LLAMA_API_KEY,
   baseURL: process.env.LLAMA_BASE_URL,
 });
 
 /**
- * ADVANCED SYSTEM PROMPT
- * This leaves no room for the LLM to hallucinate or act lazy.
+ * SYSTEM PROMPT
+ * Strict instructions to prevent hallucination, ID leaking, and lazy tool use.
  */
 const getSystemPrompt = (userName: string, date: string) => `
-You are VansKE AI, the elite car rental assistant. 
+You are VansKE AI, an elite car rental assistant for VansKE Car Rentals.
 Current User: ${userName}
 Current Date: ${date}
 
-CRITICAL RULES:
-1. SILENT EXECUTION: NEVER print '<function=...>' or raw JSON to the user. ALWAYS use the native tool-calling feature.
-2. CONTEXT RETENTION: You MUST memorize 'vehicle_id' values from search results. If a user says "I'll take the Subaru", you must automatically infer the vehicle_id from the previous search. Do NOT ask the user for an ID if you already showed it to them.
-3. DATE INFERENCE: If a user says "next Friday", calculate the exact YYYY-MM-DD based on today's date (${date}).
-4. NO GUESSWORK: If you lack the vehicle_id, days, or start_date for a booking, ASK the user clearly. Do not make up IDs.
-5. PROFESSIONAL TONE: Be concise, highly helpful, and conversational. No robotic responses.
+═══════════════════════════════════════
+ABSOLUTE RULES — NEVER VIOLATE THESE:
+═══════════════════════════════════════
+
+1. TOOL USE IS MANDATORY:
+   - ALWAYS use the native tool-calling mechanism. NEVER print "<function=...>",
+     raw JSON, or any tool syntax in your reply text. If you do not use the tool
+     system, you are broken.
+
+2. VEHICLE IDs ARE INTERNAL — NEVER SHOW THEM TO THE USER:
+   - IDs (e.g. vehicle_id: 42) are for backend use only.
+   - When presenting vehicles, use ONLY: name, year, price per day, color,
+     transmission, seating capacity, fuel type.
+   - When a user picks a car by name (e.g. "I'll take the Subaru"), you MUST
+     silently look up its ID from your most recent search result. NEVER ask the
+     user for an ID. NEVER show an ID in any message.
+
+3. NO HALLUCINATION:
+   - ONLY book vehicles that appeared in your most recent check_availability
+     result. If you did not run a search yet, run one first.
+   - NEVER invent vehicle details, prices, IDs, or availability.
+
+4. DATE INFERENCE:
+   - If a user says "next Friday" or "10th April", calculate the exact YYYY-MM-DD
+     using today's date (${date}). Confirm the dates back to the user in plain
+     language before booking.
+
+5. BOOKING CONFIRMATION FLOW:
+   - Before calling create_booking, always confirm: vehicle name, start date,
+     end date, and number of days with the user.
+   - Only call create_booking after the user says "yes", "confirm", "go ahead",
+     or similar affirmation.
+
+6. MISSING INFO:
+   - If you lack enough information to call a tool, ask the user ONE clear
+     question at a time. Never make assumptions.
+
+7. TONE:
+   - Be concise, warm, and professional. No robotic lists unless showing
+     multiple vehicle options.
 `;
 
 export const handleChat = async (c: Context) => {
@@ -46,36 +80,35 @@ export const handleChat = async (c: Context) => {
       todayDate,
     );
 
-    // 1. Construct strict message array
+    // ─── 1. Build Message Array ───────────────────────────────────────────────
     const messages: any[] = [
       { role: "system", content: systemPrompt },
       ...history.map((msg: any) => ({
         role: msg.role === "model" ? "assistant" : "user",
-        // Fallback to empty string to satisfy Groq/Llama strict content rules
-        content: msg.parts?.[0]?.text || "",
+        content: msg.parts?.[0]?.text ?? "",
       })),
       { role: "user", content: message },
     ];
 
-    // 2. Initial AI Inference
+    // ─── 2. First LLM Call ────────────────────────────────────────────────────
     const response = await client.chat.completions.create({
-      model: process.env.LLAMA_MODEL || "llama-3.1-8b-instant",
+      model: process.env.LLAMA_MODEL || "llama-3.3-70b-versatile",
       messages,
       tools: toolsSchema.map((s) => ({ type: "function", function: s })),
       tool_choice: "auto",
+      temperature: 0.3, // Lower = more deterministic, fewer hallucinations
     });
 
     const responseMessage = response.choices[0].message;
 
-    // --- TOOL EXECUTION LOGIC ---
+    // ─── 3. Detect Tool Call ──────────────────────────────────────────────────
     let functionName = "";
     let functionArgs: any = null;
     let isFormalToolCall = false;
     let activeToolCall: ChatCompletionMessageToolCall | undefined;
 
-    // A. Check for formal, native tool calls
+    // A. Native tool call (the correct path)
     if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
-      // Clean type assertion to bypass TypeScript union errors safely
       activeToolCall = responseMessage
         .tool_calls[0] as ChatCompletionMessageToolCall;
 
@@ -84,45 +117,56 @@ export const handleChat = async (c: Context) => {
         functionName = activeToolCall.function.name;
         try {
           functionArgs = JSON.parse(activeToolCall.function.arguments);
-        } catch (e) {
+        } catch {
           console.error(
             "[Agent] Failed to parse native tool args:",
             activeToolCall.function.arguments,
           );
           return c.json({
             reply:
-              "I encountered an internal error processing your request. Could you rephrase?",
+              "I ran into an internal error. Could you rephrase your request?",
           });
         }
       }
     }
-    // B. Fallback: Catch text-leaked function tags
+    // B. Leaked text fallback — intercept and re-run properly
     else if (
       responseMessage.content &&
       responseMessage.content.includes("<function=")
     ) {
-      console.warn("[Agent] Intercepted text-leaked function call.");
+      console.warn(
+        "[Agent] WARNING: Model leaked a tool call as text. Intercepting.",
+      );
+
       const match = responseMessage.content.match(
-        /<function=(\w+)>(.*?)<\/function>/s,
+        /<function=(\w+)>([\s\S]*?)<\/function>/,
       );
       if (match) {
         functionName = match[1];
         try {
           functionArgs = JSON.parse(match[2].trim());
-        } catch (e) {
-          // If the model leaked garbage JSON, isolate the failure.
+        } catch {
+          // Partial parse failed — recover gracefully using the user's message
           console.error("[Agent] Failed to parse leaked tool args:", match[2]);
-          functionArgs = { searchQuery: message }; // Last resort semantic fallback
+          functionArgs =
+            functionName === "check_availability"
+              ? { searchQuery: message }
+              : null;
         }
+      }
+
+      // If we couldn't recover args, return a safe failure
+      if (!functionArgs) {
+        return c.json({
+          reply:
+            "I had trouble processing that. Could you describe what you're looking for?",
+        });
       }
     }
 
-    // 3. Process the Tool Call if one was identified
+    // ─── 4. Execute Tool ──────────────────────────────────────────────────────
     if (functionName && functionArgs) {
-      console.log(
-        `[Agent] Executing: ${functionName} with args:`,
-        functionArgs,
-      );
+      console.log(`[Agent] Executing: ${functionName}`, functionArgs);
 
       let rawResult: any;
       try {
@@ -147,14 +191,14 @@ export const handleChat = async (c: Context) => {
       const parsedResult =
         typeof rawResult === "string" ? JSON.parse(rawResult) : rawResult;
 
-      // 4. Second Call: Feed result back to AI
+      // ─── 5. Second LLM Call (Summarise Tool Result) ───────────────────────
       const secondCallMessages = [...messages];
 
       if (isFormalToolCall && activeToolCall) {
-        // Standard OpenAI specification for tool responses
+        // Standard spec: assistant message with tool_calls + tool result
         secondCallMessages.push({
           role: "assistant",
-          content: responseMessage.content || "",
+          content: responseMessage.content ?? "",
           tool_calls: [activeToolCall],
         });
         secondCallMessages.push({
@@ -163,165 +207,267 @@ export const handleChat = async (c: Context) => {
           content: JSON.stringify(parsedResult),
         });
       } else {
-        // Fallback specification: Groq throws 400 errors if you send fake tool_call_ids.
-        // If we caught a regex leak, we feed the data back as a system observation.
+        // Fallback spec: inject as a system observation to avoid bad tool_call_id
         secondCallMessages.push({
           role: "system",
-          content: `Observation from internal system: The requested tool '${functionName}' returned the following data: ${JSON.stringify(parsedResult)}. Summarize this naturally to the user.`,
+          content: `[SYSTEM OBSERVATION] The tool '${functionName}' returned: ${JSON.stringify(parsedResult)}. Present this information naturally to the user. Do NOT expose any vehicle IDs, database IDs, or internal numbers.`,
         });
       }
 
-      const finalResponse = await client.chat.completions.create({
-        model: process.env.LLAMA_MODEL || "llama-3.1-8b-instant",
-        messages: secondCallMessages,
+      // Add a hard reminder to the second call
+      secondCallMessages.push({
+        role: "system",
+        content:
+          "REMINDER: Do NOT include vehicle_id, booking_id numbers, or any internal IDs in your reply. Refer to vehicles by their make, model, and year only.",
       });
 
+      const finalResponse = await client.chat.completions.create({
+        model: process.env.LLAMA_MODEL || "llama-3.3-70b-versatile",
+        messages: secondCallMessages,
+        temperature: 0.3,
+      });
+
+      const finalReply = finalResponse.choices[0].message.content ?? "";
+
+      // ─── 6. Strip any leaked IDs as a last-resort filter ─────────────────
+      const sanitizedReply = sanitizeReply(finalReply);
+
       return c.json({
-        reply: finalResponse.choices[0].message.content,
+        reply: sanitizedReply,
         actionPerformed: functionName,
+        // Only return structured result for the frontend — not echoed in chat
         functionResult: parsedResult,
       });
     }
 
-    // 5. Standard Reply (No tools triggered)
-    return c.json({ reply: responseMessage.content });
+    // ─── 7. Standard Reply (No tool triggered) ────────────────────────────────
+    return c.json({ reply: responseMessage.content ?? "" });
   } catch (error: any) {
     console.error("[Agent FATAL Error]:", error.message || error);
     if (error.response) console.error("Provider details:", error.response.data);
 
     return c.json(
       {
-        error:
-          "VansKE AI systems are currently heavily loaded. Please try again in a moment.",
+        reply:
+          "VansKE AI is experiencing high demand right now. Please try again in a moment.",
       },
       500,
     );
   }
 };
 
-// // src/Gemini/chatController.ts (Now Llama Controller)
+/**
+ * sanitizeReply
+ * Last-resort text filter to strip any numeric IDs the model may have leaked.
+ * Removes patterns like:
+ *   "Vehicle ID: 12345"  |  "ID: 42"  |  "id: 99"  |  "#12345"
+ */
+function sanitizeReply(text: string): string {
+  return text
+    .replace(/\b(vehicle[_\s]?id|booking[_\s]?id|id)\s*[:#]?\s*\d+/gi, "")
+    .replace(/#\d{3,}/g, "") // strip "#12345"-style refs
+    .replace(/\(\s*id\s*:\s*\d+\s*\)/gi, "") // strip "(id: 42)"
+    .replace(/\s{2,}/g, " ") // clean up double spaces left behind
+    .trim();
+}
+
+// // src/Gemini/chatController.ts
 // import type { Context } from "hono";
 // import OpenAI from "openai";
+// import type { ChatCompletionMessageToolCall } from "openai/resources/index.js";
 // import { toolsSchema, toolsFunctions } from "../utils/aiTools.js";
 
-// // Initialize OpenAI client for Llama (Groq/Together/Self-hosted)
+// // Initialize OpenAI client
 // const client = new OpenAI({
 //   apiKey: process.env.LLAMA_API_KEY,
-//   baseURL: process.env.LLAMA_BASE_URL, // e.g., https://api.groq.com/openai/v1
+//   baseURL: process.env.LLAMA_BASE_URL,
 // });
 
-// const systemPrompt = `
-// You are the VansKE AI Agent. Your goal is to make renting a car effortless.
-// RULES:
-// 1. MEMORY: Always remember the 'vehicle_id' of vehicles you find in search results.
-// 2. PROACTIVE: If a user says "I'll take the Subaru" and you just showed them a Subaru with ID 105, do NOT ask for the ID. Use 105 automatically.
-// 3. DATE MATH: Today is ${new Date().toISOString().split("T")[0]}. If a user says "next Monday," calculate the YYYY-MM-DD string yourself.
-// 4. TOOL USAGE: Never show <function> tags to the user. Use tools silently.
-// 5. NO HALLUCINATION: If you haven't searched yet, run 'check_availability' first.
+// /**
+//  * ADVANCED SYSTEM PROMPT
+//  * This leaves no room for the LLM to hallucinate or act lazy.
+//  */
+// const getSystemPrompt = (userName: string, date: string) => `
+// You are VansKE AI, the elite car rental assistant.
+// Current User: ${userName}
+// Current Date: ${date}
+
+// CRITICAL RULES:
+// 1. SILENT EXECUTION: NEVER print '<function=...>' or raw JSON to the user. ALWAYS use the native tool-calling feature.
+// 2. CONTEXT RETENTION: You MUST memorize 'vehicle_id' values from search results. If a user says "I'll take the Subaru", you must automatically infer the vehicle_id from the previous search. Do NOT ask the user for an ID if you already showed it to them.
+// 3. DATE INFERENCE: If a user says "next Friday", calculate the exact YYYY-MM-DD based on today's date (${date}).
+// 4. NO GUESSWORK: If you lack the vehicle_id, days, or start_date for a booking, ASK the user clearly. Do not make up IDs.
+// 5. PROFESSIONAL TONE: Be concise, highly helpful, and conversational. No robotic responses.
 // `;
 
 // export const handleChat = async (c: Context) => {
 //   try {
-//     const { message, history } = await c.req.json();
+//     const body = await c.req.json();
+//     const message: string = body.message;
+//     const history: any[] = body.history || [];
+
 //     const user = (c as any).user;
 //     const authHeader = c.req.header("Authorization") || "";
 
-//     // SYSTEM PROMPT: The "Rules of Engagement"
-//     const systemPrompt = `You are the VansKE AI Agent.
-//     - Today is ${new Date().toDateString()}.
-//     - User: ${user.first_name || "Customer"}.
-//     - If you find vehicles, REMEMBER their IDs. If a user picks one later, use that ID automatically.
-//     - IMPORTANT: When using a tool, do NOT print <function> tags. Use the tool-calling system.`;
+//     if (!user) {
+//       return c.json({ error: "Authentication required." }, 401);
+//     }
 
+//     const todayDate = new Date().toISOString().split("T")[0];
+//     const systemPrompt = getSystemPrompt(
+//       user.first_name || "Customer",
+//       todayDate,
+//     );
+
+//     // 1. Construct strict message array
 //     const messages: any[] = [
 //       { role: "system", content: systemPrompt },
 //       ...history.map((msg: any) => ({
 //         role: msg.role === "model" ? "assistant" : "user",
+//         // Fallback to empty string to satisfy Groq/Llama strict content rules
 //         content: msg.parts?.[0]?.text || "",
 //       })),
 //       { role: "user", content: message },
 //     ];
 
+//     // 2. Initial AI Inference
 //     const response = await client.chat.completions.create({
 //       model: process.env.LLAMA_MODEL || "llama-3.1-8b-instant",
 //       messages,
-//       tools: toolsSchema.map(s => ({ type: "function", function: s })),
+//       tools: toolsSchema.map((s) => ({ type: "function", function: s })),
 //       tool_choice: "auto",
 //     });
 
-//     let assistantMsg = response.choices[0].message;
-//     let toolCall = assistantMsg.tool_calls?.[0];
+//     const responseMessage = response.choices[0].message;
 
-//     // --- THE "GOOD BRAIN" INTERCEPTOR ---
-//     // If Llama leaks text like "<function=check_availability>...", we catch it here.
-//     if (!toolCall && assistantMsg.content?.includes("<function=")) {
-//       const match = assistantMsg.content.match(/<function=(\w+)>(.*?)<\/function>/s);
+//     // --- TOOL EXECUTION LOGIC ---
+//     let functionName = "";
+//     let functionArgs: any = null;
+//     let isFormalToolCall = false;
+//     let activeToolCall: ChatCompletionMessageToolCall | undefined;
+
+//     // A. Check for formal, native tool calls
+//     if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
+//       // Clean type assertion to bypass TypeScript union errors safely
+//       activeToolCall = responseMessage
+//         .tool_calls[0] as ChatCompletionMessageToolCall;
+
+//       if (activeToolCall.type === "function") {
+//         isFormalToolCall = true;
+//         functionName = activeToolCall.function.name;
+//         try {
+//           functionArgs = JSON.parse(activeToolCall.function.arguments);
+//         } catch (e) {
+//           console.error(
+//             "[Agent] Failed to parse native tool args:",
+//             activeToolCall.function.arguments,
+//           );
+//           return c.json({
+//             reply:
+//               "I encountered an internal error processing your request. Could you rephrase?",
+//           });
+//         }
+//       }
+//     }
+//     // B. Fallback: Catch text-leaked function tags
+//     else if (
+//       responseMessage.content &&
+//       responseMessage.content.includes("<function=")
+//     ) {
+//       console.warn("[Agent] Intercepted text-leaked function call.");
+//       const match = responseMessage.content.match(
+//         /<function=(\w+)>(.*?)<\/function>/s,
+//       );
 //       if (match) {
-//         toolCall = {
-//           id: `manual_${Date.now()}`,
-//           type: "function",
-//           function: { name: match[1], arguments: match[2].trim() }
-//         } as any;
+//         functionName = match[1];
+//         try {
+//           functionArgs = JSON.parse(match[2].trim());
+//         } catch (e) {
+//           // If the model leaked garbage JSON, isolate the failure.
+//           console.error("[Agent] Failed to parse leaked tool args:", match[2]);
+//           functionArgs = { searchQuery: message }; // Last resort semantic fallback
+//         }
 //       }
 //     }
 
-//     if (toolCall) {
-//       const functionName = toolCall.function.name;
-//       const args = JSON.parse(toolCall.function.arguments);
+//     // 3. Process the Tool Call if one was identified
+//     if (functionName && functionArgs) {
+//       console.log(
+//         `[Agent] Executing: ${functionName} with args:`,
+//         functionArgs,
+//       );
 
-//       console.log(`[Agent] Calling: ${functionName} with args:`, args);
-
-//       let toolResult: any;
-//       if (functionName === "check_availability") {
-//         toolResult = await toolsFunctions.check_availability(args);
-//       } else if (functionName === "create_booking") {
-//         toolResult = await toolsFunctions.create_booking(args, user.user_id, authHeader);
+//       let rawResult: any;
+//       try {
+//         if (functionName === "check_availability") {
+//           rawResult = await toolsFunctions.check_availability(functionArgs);
+//         } else if (functionName === "create_booking") {
+//           rawResult = await toolsFunctions.create_booking(
+//             functionArgs,
+//             user.user_id,
+//             authHeader,
+//           );
+//         } else {
+//           rawResult = {
+//             success: false,
+//             error: `Unknown function: ${functionName}`,
+//           };
+//         }
+//       } catch (error: any) {
+//         rawResult = { success: false, error: error.message };
 //       }
 
-//       const parsedResult = typeof toolResult === "string" ? JSON.parse(toolResult) : toolResult;
+//       const parsedResult =
+//         typeof rawResult === "string" ? JSON.parse(rawResult) : rawResult;
 
-//       // --- THE AGENT LOOP: SECOND CALL ---
-//       // We send the data back to the AI so it can give a clean "human" answer.
-//       const secondResponse = await client.chat.completions.create({
+//       // 4. Second Call: Feed result back to AI
+//       const secondCallMessages = [...messages];
+
+//       if (isFormalToolCall && activeToolCall) {
+//         // Standard OpenAI specification for tool responses
+//         secondCallMessages.push({
+//           role: "assistant",
+//           content: responseMessage.content || "",
+//           tool_calls: [activeToolCall],
+//         });
+//         secondCallMessages.push({
+//           role: "tool",
+//           tool_call_id: activeToolCall.id,
+//           content: JSON.stringify(parsedResult),
+//         });
+//       } else {
+//         // Fallback specification: Groq throws 400 errors if you send fake tool_call_ids.
+//         // If we caught a regex leak, we feed the data back as a system observation.
+//         secondCallMessages.push({
+//           role: "system",
+//           content: `Observation from internal system: The requested tool '${functionName}' returned the following data: ${JSON.stringify(parsedResult)}. Summarize this naturally to the user.`,
+//         });
+//       }
+
+//       const finalResponse = await client.chat.completions.create({
 //         model: process.env.LLAMA_MODEL || "llama-3.1-8b-instant",
-//         messages: [
-//           ...messages,
-//           {
-//             role: "assistant",
-//             content: assistantMsg.content || "", // Include the text it leaked
-//             tool_calls: assistantMsg.tool_calls || [toolCall], // Ensure tool_calls is populated
-//           },
-//           {
-//             role: "tool",
-//             tool_call_id: toolCall.id,
-//             content: JSON.stringify(parsedResult),
-//           },
-//         ],
+//         messages: secondCallMessages,
 //       });
 
 //       return c.json({
-//         reply: secondResponse.choices[0].message.content,
+//         reply: finalResponse.choices[0].message.content,
 //         actionPerformed: functionName,
 //         functionResult: parsedResult,
 //       });
 //     }
 
-//     // No tool needed, just reply
-//     return c.json({ reply: assistantMsg.content });
-
+//     // 5. Standard Reply (No tools triggered)
+//     return c.json({ reply: responseMessage.content });
 //   } catch (error: any) {
-//     console.error("Agent Error:", error);
-//     return c.json({ error: "Service unavailable." }, 500);
+//     console.error("[Agent FATAL Error]:", error.message || error);
+//     if (error.response) console.error("Provider details:", error.response.data);
+
+//     return c.json(
+//       {
+//         error:
+//           "VansKE AI systems are currently heavily loaded. Please try again in a moment.",
+//       },
+//       500,
+//     );
 //   }
 // };
-
-// //     return c.json({ reply: responseMessage.content });
-// //   } catch (error: any) {
-// //     console.error("Llama Error:", error.message || error);
-// //     // Log the full error to see exactly what the provider is complaining about
-// //     if (error.response)
-// //       console.error("Provider Response:", error.response.data);
-
-// //     return c.json({ error: "Assistant busy. Try again." }, 500);
-// //   }
-// // };
