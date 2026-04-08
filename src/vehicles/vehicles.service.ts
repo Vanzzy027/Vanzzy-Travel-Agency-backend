@@ -184,7 +184,10 @@ export const getAvailableVehiclesService = async (): Promise<
     vs.color,
     vs.features,
     vs.images,
-    vs.on_promo
+    vs.on_promo,
+    vs.promo_rate,
+    vs.promo_start_date,
+    vs.promo_end_date
   FROM Vehicles v
   INNER JOIN VehicleSpecifications vs 
     ON v.vehicleSpec_id = vs.vehicleSpec_id
@@ -219,7 +222,10 @@ export const getVehicleByIdService = async (
         vs.color,
         vs.features,
         vs.images,
-        vs.on_promo
+        vs.on_promo,
+            vs.promo_rate,
+    vs.promo_start_date,
+    vs.promo_end_date
       FROM Vehicles v
       INNER JOIN VehicleSpecifications vs ON v.vehicleSpec_id = vs.vehicleSpec_id
       WHERE v.vehicle_id = @id
