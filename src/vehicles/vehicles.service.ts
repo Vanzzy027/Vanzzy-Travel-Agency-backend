@@ -171,32 +171,26 @@ export const getAvailableVehiclesService = async (): Promise<
 > => {
   try {
     const pool = await getDbPool();
-
     const query = `
-      SELECT 
-        v.*,
-        v.vehicle_id, 
-        v.rental_rate, 
-        v.status,
-         
-        vs.model, 
-        vs.vehicle_type,
-       
-        vs.manufacturer,
-       
-        vs.year,
-        vs.fuel_type,
-        vs.transmission,
-        vs.seating_capacity,
-        vs.color,
-        vs.features,
-        vs.images,
-        vs.on_promo
-      FROM Vehicles v
-      INNER JOIN VehicleSpecifications vs ON v.vehicleSpec_id = vs.vehicleSpec_id
-      WHERE v.status = 'Available'
-      ORDER BY vs.manufacturer, vs.model
-    `;
+  SELECT 
+    v.*,
+    vs.manufacturer,
+    vs.model, 
+    vs.vehicle_type,
+    vs.year,
+    vs.fuel_type,
+    vs.transmission,
+    vs.seating_capacity,
+    vs.color,
+    vs.features,
+    vs.images,
+    vs.on_promo
+  FROM Vehicles v
+  INNER JOIN VehicleSpecifications vs 
+    ON v.vehicleSpec_id = vs.vehicleSpec_id
+  WHERE v.status = 'Available'
+  ORDER BY vs.manufacturer, vs.model
+`;
 
     const result = await pool.request().query(query);
     return result.recordset as VehicleWithSpecs[];
