@@ -178,12 +178,12 @@ export const getAvailableVehiclesService = async (): Promise<
         v.vehicle_id, 
         v.rental_rate, 
         v.status,
-        vs.manufacturer, 
+         
         vs.model, 
         vs.vehicle_type,
-        vs.seating_capacity,
+       
         vs.manufacturer,
-        vs.model,
+       
         vs.year,
         vs.fuel_type,
         vs.transmission,

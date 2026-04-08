@@ -221,31 +221,6 @@ export const updateVehicleStatus = async (c: Context) => {
   }
 };
 
-// // Delete vehicle
-// export const deleteVehicle = async (c: Context) => {
-//   try {
-//     const id = parseInt(c.req.param('id'));
-
-//     if (isNaN(id) || id <= 0) {
-//       return c.json({ error: "Invalid vehicle ID" }, 400);
-//     }
-
-//     const deleted = await deleteVehicleService(id);
-
-//     if (!deleted) {
-//       return c.json({ error: "Vehicle not found" }, 404);
-//     }
-
-//     return c.json({
-//       message: "Vehicle deleted successfully"
-//     }, 200);
-
-//   } catch (error: any) {
-//     console.error("Error deleting vehicle:", error);
-//     return c.json({ error: error.message || "Internal server error" }, 500);
-//   }
-// };
-// Delete vehicle controller function
 export const deleteVehicle = async (c: Context) => {
   try {
     // Hono params are strings, we parse them
