@@ -115,17 +115,26 @@ export const toolsFunctions = {
         });
       }
 
-      const formatted = vehicles.map((v: Vehicle) => ({
+      // src/utils/aiTools.ts inside check_availability
+
+      const formatted = vehicles.map((v: any) => ({
+        // Internal ID for booking
         id: v.vehicle_id,
+
+        // Mapping to match your SQL Schema exactly
         name: `${v.manufacturer} ${v.model}`,
-        year: v.year ?? "N/A",
+        brand: v.manufacturer,
+        model: v.model,
+        year: v.year,
+        type: v.vehicle_type, // Matches 'Sedan', 'SUV', etc.
+        transmission: v.transmission,
+        fuel: v.fuel_type,
+        seats: v.seating_capacity,
+        color: v.color,
         pricePerDay: v.rental_rate,
-        color: v.color ?? "N/A",
-        transmission: v.transmission ?? "N/A",
-        seats: v.seating_capacity ?? "N/A",
-        fuelType: v.fuel_type ?? "N/A",
-        features: v.features ?? "N/A",
-        type: v.vehicle_type ?? "N/A",
+        features: v.features,
+        isPromo: v.on_promo === true || v.on_promo === 1,
+        mileage: v.current_mileage,
       }));
 
       return JSON.stringify({
