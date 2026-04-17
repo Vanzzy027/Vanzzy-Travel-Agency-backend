@@ -133,7 +133,13 @@ export const getAllVehiclesService = async (filters?: {
         vs.color,
         vs.features,
         vs.images,
-        vs.on_promo
+        vs.on_promo,
+        vs.promo_rate,
+        vs.promo_start_date,
+        vs.promo_end_date,
+        vs.engine_capacity,
+        vs.vehicle_type
+
       FROM Vehicles v
       INNER JOIN VehicleSpecifications vs ON v.vehicleSpec_id = vs.vehicleSpec_id
       WHERE 1=1
