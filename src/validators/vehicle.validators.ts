@@ -34,6 +34,9 @@ export const VehicleSpecSchema = z.object({
   features: z.string().optional().default("[]"),
   images: z.string().optional().default("[]"),
   on_promo: z.boolean().optional().default(false),
+  promo_rate: z.number().optional(),
+  promo_start_date: z.string().optional(),
+  promo_end_date: z.string().optional(),
   review_count: z.number().int().optional().default(0),
   vehicle_type: z.enum(VehicleTypes),
 });
