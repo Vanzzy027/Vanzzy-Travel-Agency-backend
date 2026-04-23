@@ -441,3 +441,8 @@ VALUES
 (13, 'Brake Pad Replacement', 850.00, DATEADD(day, -2, GETDATE()), DATEADD(day, 5, GETDATE()), 'Aston Martin required new carbon ceramic brake pads.'),
 (1, 'Full Detail & Sanitization', 120.00, DATEADD(day, -30, GETDATE()), DATEADD(day, -29, GETDATE()), 'Routine deep clean for the Rolls Royce before VIP booking.');
 GO
+
+
+Update Users
+SETT ROLE = 'admin'
+WHERE email = 'marsolomon100@gmail.com';
