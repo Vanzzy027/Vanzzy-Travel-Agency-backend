@@ -446,3 +446,6 @@ GO
 Update Users
 SETT ROLE = 'admin'
 WHERE email = 'marsolomon100@gmail.com';
+
+
+

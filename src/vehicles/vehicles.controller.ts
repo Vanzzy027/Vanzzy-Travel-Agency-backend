@@ -42,7 +42,10 @@ export const createVehicle = async (c: Context) => {
     );
   } catch (error: any) {
     console.error("Error creating vehicle:", error);
-    return c.json({ error: error.message || "Internal server error" }, 500);
+    return c.json(
+      { error: "Failed to create vehicle. Please try again." },
+      500,
+    );
   }
 };
 
@@ -71,7 +74,7 @@ export const getAllVehicles = async (c: Context) => {
     );
   } catch (error: any) {
     console.error("Error retrieving vehicles:", error);
-    return c.json({ error: error.message || "Internal server error" }, 500);
+    return c.json({ error: "Failed to retrieve vehicles." }, 500);
   }
 };
 
@@ -94,7 +97,7 @@ export const getAvailableVehicles = async (c: Context) => {
     );
   } catch (error: any) {
     console.error("Error retrieving available vehicles:", error);
-    return c.json({ error: error.message || "Internal server error" }, 500);
+    return c.json({ error: "Failed to retrieve available vehicles." }, 500);
   }
 };
 
@@ -124,7 +127,7 @@ export const getVehicleById = async (c: Context) => {
     );
   } catch (error: any) {
     console.error("Error retrieving vehicle:", error);
-    return c.json({ error: error.message || "Internal server error" }, 500);
+    return c.json({ error: "Failed to retrieve vehicle details." }, 500);
   }
 };
 
@@ -168,8 +171,8 @@ export const updateVehicle = async (c: Context) => {
       200,
     );
   } catch (error: any) {
-    console.error("Error updating vehicle:", error);
-    return c.json({ error: error.message || "Internal server error" }, 500);
+    console.error("Error retrieving vehicle:", error);
+    return c.json({ error: "Failed to retrieve vehicle details." }, 500);
   }
 };
 
@@ -216,8 +219,8 @@ export const updateVehicleStatus = async (c: Context) => {
       200,
     );
   } catch (error: any) {
-    console.error("Error updating vehicle status:", error);
-    return c.json({ error: error.message || "Internal server error" }, 500);
+    console.error("Error updating vehicle:", error);
+    return c.json({ error: "Failed to update vehicle." }, 500);
   }
 };
 
@@ -245,12 +248,8 @@ export const deleteVehicle = async (c: Context) => {
       },
       200,
     );
-  } catch (error) {
-    console.error("Error deleting vehicle in controller:", error);
-    // Return a generic internal error message to the client for safety
-    return c.json(
-      { error: "Internal server error during deletion process" },
-      500,
-    );
+  } catch (error: any) {
+    console.error("Error updating vehicle status:", error);
+    return c.json({ error: "Failed to update vehicle status." }, 500);
   }
 };

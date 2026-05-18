@@ -36,7 +36,7 @@ app.use(
       ];
       return allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
     },
-    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
     exposeHeaders: ["Content-Length", "X-Kuma-Revision"],
     maxAge: 600,

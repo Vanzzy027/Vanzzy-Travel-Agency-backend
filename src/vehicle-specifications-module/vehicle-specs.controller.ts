@@ -38,7 +38,10 @@ export const createVehicleSpec = async (c: Context) => {
     );
   } catch (error: any) {
     console.error("Error creating vehicle spec:", error);
-    return c.json({ error: error.message || "Internal server error" }, 500);
+    return c.json(
+      { error: "Failed to create vehicle specification. Please try again." },
+      500,
+    );
   }
 };
 
@@ -72,7 +75,7 @@ export const getAllVehicleSpecs = async (c: Context) => {
     );
   } catch (error: any) {
     console.error("Error retrieving vehicle specs:", error);
-    return c.json({ error: error.message || "Internal server error" }, 500);
+    return c.json({ error: "Failed to retrieve vehicle specifications." }, 500);
   }
 };
 
@@ -102,7 +105,10 @@ export const getVehicleSpecById = async (c: Context) => {
     );
   } catch (error: any) {
     console.error("Error retrieving vehicle spec:", error);
-    return c.json({ error: error.message || "Internal server error" }, 500);
+    return c.json(
+      { error: "Failed to retrieve vehicle specification details." },
+      500,
+    );
   }
 };
 
@@ -150,7 +156,7 @@ export const updateVehicleSpec = async (c: Context) => {
     );
   } catch (error: any) {
     console.error("Error updating vehicle spec:", error);
-    return c.json({ error: error.message || "Internal server error" }, 500);
+    return c.json({ error: "Failed to update vehicle specification." }, 500);
   }
 };
 
@@ -179,6 +185,6 @@ export const deleteVehicleSpec = async (c: Context) => {
     );
   } catch (error: any) {
     console.error("Error deleting vehicle spec:", error);
-    return c.json({ error: error.message || "Internal server error" }, 500);
+    return c.json({ error: "Failed to delete vehicle specification." }, 500);
   }
 };

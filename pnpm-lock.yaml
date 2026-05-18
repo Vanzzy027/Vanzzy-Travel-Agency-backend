@@ -65,6 +65,9 @@ importers:
       sequelize:
         specifier: ^6.37.7
         version: 6.37.7
+      stripe:
+        specifier: ^22.1.1
+        version: 22.1.1(@types/node@20.19.25)
       zod:
         specifier: ^4.1.12
         version: 4.1.12
@@ -1458,6 +1461,15 @@ packages:
   strip-bom@3.0.0:
     resolution: {integrity: sha512-vavAMRXOgBVNF6nyEEmL3DBK19iRpDcoIwW+swQ+CbGiu7lju6t+JklA1MHweoWtadgt4ISVUsXLyDq34ddcwA==}
     engines: {node: '>=4'}
+
+  stripe@22.1.1:
+    resolution: {integrity: sha512-cmodIYP27tBkJ8G7DuGgWw0PFuemlFZbuF3Wwr1TrjFjUa3T7NIgCe6TVwX8BO2ynu+xtTuDGfHafNDCPt9lXA==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@types/node': '>=18'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
 
   strnum@2.1.1:
     resolution: {integrity: sha512-7ZvoFTiCnGxBtDqJ//Cu6fWtZtc7Y3x+QOirG15wztbdngGSkht27o2pyGWrVy0b4WAy3jbKmnoK6g5VlVNUUw==}
@@ -3318,6 +3330,10 @@ snapshots:
       safe-buffer: 5.2.1
 
   strip-bom@3.0.0: {}
+
+  stripe@22.1.1(@types/node@20.19.25):
+    optionalDependencies:
+      '@types/node': 20.19.25
 
   strnum@2.1.1: {}
 

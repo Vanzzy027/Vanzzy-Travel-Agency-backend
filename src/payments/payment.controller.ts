@@ -2,6 +2,7 @@
 import { type Context } from "hono";
 import { PaymentService } from "./payment.service.js";
 import jwt from "jsonwebtoken";
+import { StripeService } from "./stripe.service.js";
 
 export class PaymentController {
   constructor(private paymentService: PaymentService) {}
@@ -100,11 +101,56 @@ export class PaymentController {
         data: result.data,
       });
     } catch (error: any) {
+      // 1. Log the actual error to the backend console for YOU to see
       console.error("Initialize Payment Error:", error);
+
+      // 2. Send a safe, generic message to the user
       return c.json(
         {
           success: false,
-          message: error.message || "Failed to initialize payment",
+          message: "Payment initialization failed. Please try again later.",
+        },
+        500,
+      );
+    }
+  }
+
+  // Inside PaymentController class
+
+  async createStripeIntent(c: Context) {
+    try {
+      const body = await c.req.json();
+
+      // Validate required fields
+      const { booking_id, amount, currency, metadata } = body;
+      if (!booking_id || !amount || !currency) {
+        return c.json(
+          {
+            success: false,
+            message: "Missing required fields: booking_id, amount, currency",
+          },
+          400,
+        );
+      }
+
+      // Instantiate StripeService (or use dependency injection if you prefer)
+      const stripeService = new StripeService();
+      const result = await stripeService.createPaymentIntent({
+        amount,
+        currency,
+        metadata,
+      });
+
+      return c.json({
+        success: true,
+        clientSecret: result.clientSecret,
+      });
+    } catch (error: any) {
+      console.error("Stripe Intent Error:", error);
+      return c.json(
+        {
+          success: false,
+          message: error.message || "Failed to create Stripe payment intent",
         },
         500,
       );

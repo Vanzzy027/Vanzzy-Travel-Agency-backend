@@ -72,8 +72,11 @@ export const createBooking = async (c: CustomContext) => {
       201,
     );
   } catch (error: any) {
-    console.error("❌ Error creating booking:", error);
-    return c.json({ error: error.message || "Internal server error" }, 500);
+    console.error("Error creating booking:", error);
+    return c.json(
+      { error: "Failed to create booking. Please try again later." },
+      500,
+    );
   }
 };
 
@@ -100,7 +103,8 @@ export const updateBookingStatusController = async (c: Context) => {
       200,
     );
   } catch (error: any) {
-    return c.json({ error: error.message }, 400);
+    console.error("Error updating booking status:", error);
+    return c.json({ error: "Failed to update booking status." }, 400); // Kept as 400 since that's what you had
   }
 };
 
@@ -135,7 +139,8 @@ export const getAllBookings = async (c: Context) => {
       200,
     );
   } catch (error: any) {
-    return c.json({ error: error.message || "Internal server error" }, 500);
+    console.error("Error fetching all bookings:", error);
+    return c.json({ error: "Failed to retrieve bookings." }, 500);
   }
 };
 
@@ -169,7 +174,8 @@ export const getBookingById = async (c: AuthContext) => {
       200,
     );
   } catch (error: any) {
-    return c.json({ error: error.message || "Internal server error" }, 500);
+    console.error("Error fetching booking by ID:", error);
+    return c.json({ error: "Failed to retrieve booking details." }, 500);
   }
 };
 
@@ -199,7 +205,8 @@ export const getUserBookings = async (c: AuthContext) => {
       200,
     );
   } catch (error: any) {
-    return c.json({ error: error.message || "Internal server error" }, 500);
+    console.error("Error fetching user bookings:", error);
+    return c.json({ error: "Failed to retrieve your bookings." }, 500);
   }
 };
 
@@ -233,7 +240,11 @@ export const getVehicleBookings = async (c: Context) => {
       200,
     );
   } catch (error: any) {
-    return c.json({ error: error.message || "Internal server error" }, 500);
+    console.error("Error fetching vehicle bookings:", error);
+    return c.json(
+      { error: "Failed to retrieve bookings for this vehicle." },
+      500,
+    );
   }
 };
 
@@ -268,7 +279,8 @@ export const updateBooking = async (c: Context) => {
       200,
     );
   } catch (error: any) {
-    return c.json({ error: error.message || "Internal server error" }, 500);
+    console.error("Error updating booking:", error);
+    return c.json({ error: "Failed to update booking details." }, 500);
   }
 };
 
@@ -301,7 +313,11 @@ export const cancelBooking = async (c: AuthContext) => {
       200,
     );
   } catch (error: any) {
-    return c.json({ error: error.message || "Internal server error" }, 500);
+    console.error("Error cancelling booking:", error);
+    return c.json(
+      { error: "Failed to cancel booking. Please try again." },
+      500,
+    );
   }
 };
 
@@ -332,6 +348,7 @@ export const completeBooking = async (c: Context) => {
       200,
     );
   } catch (error: any) {
-    return c.json({ error: error.message || "Internal server error" }, 500);
+    console.error("Error completing booking:", error);
+    return c.json({ error: "Failed to complete booking." }, 500);
   }
 };

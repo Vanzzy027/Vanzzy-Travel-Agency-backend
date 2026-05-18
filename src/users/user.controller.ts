@@ -60,12 +60,11 @@ export const getProfile = async (c: ContextWithUser) => {
       },
       200,
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching profile:", error);
     return c.json(
       {
-        error: "Failed to retrieve profile",
-        message: error instanceof Error ? error.message : "Unknown error",
+        error: "Failed to retrieve profile. Please try again later.",
       },
       500,
     );
@@ -111,7 +110,10 @@ export const updateProfile = async (c: ContextWithUser) => {
     });
   } catch (error: any) {
     console.error("Error updating profile:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json(
+      { error: "Failed to update profile. Please try again." },
+      500,
+    );
   }
 };
 
@@ -139,7 +141,7 @@ export const getUserById = async (c: ContextWithUser) => {
     });
   } catch (error: any) {
     console.error("Error fetching user:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: "Failed to retrieve user. Please try again." }, 500);
   }
 };
 
@@ -197,7 +199,7 @@ export const updateUserById = async (c: ContextWithUser) => {
     });
   } catch (error: any) {
     console.error("Error updating user:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: "Failed to update user. Please try again." }, 500);
   }
 };
 
@@ -259,7 +261,10 @@ export const changeUserRole = async (c: ContextWithUser) => {
     });
   } catch (error: any) {
     console.error("Error changing role:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json(
+      { error: "Failed to change user role. Please try again." },
+      500,
+    );
   }
 };
 
@@ -292,7 +297,10 @@ export const getAllUsers = async (c: ContextWithUser) => {
     );
   } catch (error: any) {
     console.error("Error retrieving all users:", error);
-    return c.json({ error: error.message || "Failed to retrieve users" }, 500);
+    return c.json(
+      { error: "Failed to retrieve users. Please try again." },
+      500,
+    );
   }
 };
 
@@ -331,6 +339,6 @@ export const deleteUser = async (c: ContextWithUser) => {
     });
   } catch (error: any) {
     console.error("Error deleting user:", error);
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: "Failed to delete user. Please try again." }, 500);
   }
 };

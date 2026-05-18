@@ -10,13 +10,17 @@ const paymentRouter = new Hono();
 const paymentRepo = new PaymentRepository();
 const paymentService = new PaymentService(paymentRepo);
 const paymentController = new PaymentController(paymentService);
+// Stripe – create payment intent
+paymentRouter.post("/stripe/create-intent", async (c) => {
+  return paymentController.createStripeIntent(c);
+});
 
 // Public routes (no auth needed)
 paymentRouter.get("/health", (c) => {
-  return c.json({ 
-    status: "OK", 
+  return c.json({
+    status: "OK",
     service: "payments",
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -61,4 +65,3 @@ paymentRouter.get("/:paymentId/download", async (c) => {
 });
 
 export default paymentRouter;
-
